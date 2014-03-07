@@ -15,6 +15,8 @@ from MovementExecutor import MovementExecutor
 
 
 if __name__ == '__main__':
+	moveGroupName = rospy.get_param('moveGroupName')
+
 	time.sleep(10) #wait until moveit is loaded
 	rospy.init_node('moveit_trajectory_planner')
 
@@ -22,10 +24,10 @@ if __name__ == '__main__':
 	wm = WorldManager()
 
 	#start up ReachabilityChecker
-	rc = ReachabilityChecker()
+	rc = ReachabilityChecker(moveGroupName)
 
 	#start up MovementExecutor
-	me = MovementExecutor()
+	me = MovementExecutor(moveGroupName)
 
 	#SPIN!
 	print ""

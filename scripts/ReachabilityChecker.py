@@ -13,10 +13,10 @@ from moveit_trajectory_planner.srv import *
 
 class ReachabilityChecker:
 
-  def __init__(self):
+  def __init__(self, moveGroupName):
     #setting up enviornment
     moveit_commander.roscpp_initialize(sys.argv)
-    self.group = moveit_commander.MoveGroupCommander("mico_arm")
+    self.group = moveit_commander.MoveGroupCommander(moveGroupName)
 
     #init the server node
     s = rospy.Service('moveit_trajectory_planner/check_reachability', LocationInfo, self.handle_reachability_callback)
