@@ -9,7 +9,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
    FILES
    LocationInfo.srv
    BoxInfo.srv
-   BoxName.srv
+   MeshInfo.srv
+   ObjectName.srv
  )
  
 ## Generate added messages and services with any dependencies listed here

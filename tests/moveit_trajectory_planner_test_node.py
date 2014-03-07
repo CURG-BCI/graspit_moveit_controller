@@ -36,9 +36,26 @@ class TestTrajectoryPlanner(unittest.TestCase):
 
 		self.assertTrue(True)
 
+	def test_add_mesh(self):
+		rospy.wait_for_service('moveit_trajectory_planner/add_autoscaled_mesh')
+
+		moveit_commander.roscpp_initialize(sys.argv)
+		robot = moveit_commander.RobotCommander()
+
+		meshPose = geometry_msgs.msg.PoseStamped()
+		meshPose.header.frame_id = robot.get_planning_frame()
+		meshPose.pose.position.x = -1.0
+		meshPose.pose.position.y = 0
+		meshPose.pose.position.z = 0.6
+
+		add_autoscaled_mesh = rospy.ServiceProxy('moveit_trajectory_planner/add_autoscaled_mesh', MeshInfo)
+		add_autoscaled_mesh(meshPose, "/home/jaredweiss/Desktop/cgdb/model_database/clorox.ply", "mesh1")
+
+		self.assertTrue(True)
+
 	def test_remove_object(self):
 		rospy.wait_for_service('moveit_trajectory_planner/add_box')
-		rospy.wait_for_service('moveit_trajectory_planner/remove_box')
+		rospy.wait_for_service('moveit_trajectory_planner/remove_object')
 
 		moveit_commander.roscpp_initialize(sys.argv)
 		robot = moveit_commander.RobotCommander()
@@ -55,8 +72,8 @@ class TestTrajectoryPlanner(unittest.TestCase):
 		add_box = rospy.ServiceProxy('moveit_trajectory_planner/add_box', BoxInfo)
 		add_box(boxPose, boxXDimension, boxYDimension, boxZDimension, "box1")
 
-		remove_box = rospy.ServiceProxy('moveit_trajectory_planner/remove_box', BoxName)
-		remove_box("box1")
+		remove_object = rospy.ServiceProxy('moveit_trajectory_planner/remove_object', ObjectName)
+		remove_object("box1")
 		self.assertTrue(True)
 
 
