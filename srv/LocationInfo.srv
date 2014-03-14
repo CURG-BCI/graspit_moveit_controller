@@ -1,3 +1,4 @@
 geometry_msgs/PoseStamped targetPose
 ---
 bool isPossible
+moveit_msgs/RobotTrajectory trajectoryPlan

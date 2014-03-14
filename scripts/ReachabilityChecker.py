@@ -27,6 +27,6 @@ class ReachabilityChecker:
     plan = self.group.plan()
 
     if not plan.joint_trajectory.joint_names:
-      return LocationInfoResponse(False) #this means the list is empty and therefore there is no path
+      return LocationInfoResponse(False, plan) #this means the list is empty and therefore there is no path
     else:
-      return LocationInfoResponse(True)
+      return LocationInfoResponse(True, plan)
