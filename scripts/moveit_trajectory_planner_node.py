@@ -6,18 +6,11 @@ from WorldManager import WorldManager
 from ReachabilityChecker import ReachabilityChecker
 from MovementExecutor import MovementExecutor
 
-#HAO = False
-#def Hao():
-#	import hao
-#	if HAO:
-#		hao = HAO()
-#		return False
-
 
 if __name__ == '__main__':
 	moveGroupName = rospy.get_param('moveGroupName')
 
-	time.sleep(10) #wait until moveit is loaded
+	#time.sleep(10) #wait until moveit is loaded
 	rospy.init_node('moveit_trajectory_planner')
 
 	#start up WorldManager
