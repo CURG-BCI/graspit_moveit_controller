@@ -22,7 +22,12 @@ class WorldManager:
     def __init__(self):
         moveit_commander.roscpp_initialize(sys.argv)
         self.scene = ExtendedPlanningSceneInterface()
+<<<<<<< HEAD
 
+=======
+        self.robot = moveit_commander.RobotCommander()
+        
+>>>>>>> 8057641375fa6c671b2ce454fc2e5baa8a7014ae
         #init the server node
         s1 = rospy.Service('moveit_trajectory_planner/add_box', BoxInfo, self.handle_add_box)
         s2 = rospy.Service('moveit_trajectory_planner/add_autoscaled_mesh', MeshInfo, self.handle_add_autoscaled_mesh)
@@ -95,9 +100,108 @@ class WorldManager:
             if(os.path.isfile(file_name_dict[model.model_name.strip('/')])):
                 stampedModelPose = geometry_msgs.msg.PoseStamped()
                 stampedModelPose.header.frame_id = self.robot.get_planning_frame()
+<<<<<<< HEAD
                 stampedModelPose.pose = model.pose
                 self.scene.add_mesh_autoscaled(model.object_name.strip('/'), stampedModelPose, file_name_dict[model.model_name.strip('/')])
+=======
+                print "============================="
+                print "adding:"
+                print model.object_name.strip('/')
+                stampedModelPose.pose = model.pose
+                self.scene.add_mesh_autoscaled(model.object_name.strip('/'), stampedModelPose, file_name_dict[model.model_name.strip('/')])
+                print "============================="
+>>>>>>> 8057641375fa6c671b2ce454fc2e5baa8a7014ae
             else:
                 warn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
 
             self.body_name_cache.append(model.object_name.strip('/'))
+<<<<<<< HEAD
+=======
+
+
+    """
+    #Graspit stuff
+    def publish_table_models(self):
+        ""
+        @brief - Publishes only the objects that are in a prism above the table to GraspIt                
+        ""
+
+        #Republish all of the object pose TFs
+        self.model_manager()
+
+        #get a list of models in that cube above the table
+        table_models = [model for model in self.model_manager.model_list
+                        if self.point_within_table_cube(model.get_world_pose().position)]
+
+        #Print a list of rejected models to the terminal
+        print '\ n'.join(['Model rejected %'s''%(model.object_name)
+                        for model in self.model_manager.model_list if model not in table_models])
+                
+        #For each model in the valid model list, add the model to the object list
+        #and publish it to GraspIt!
+        #FIXME -- needs to use scene message
+        object_list = []
+        scene_msg = graspit_msgs.msg.SceneInfo()
+        for model in table_models:
+            model()
+                        
+            p = model.get_world_pose()
+            print "Model name: %'s'"%(model.object_name)
+            print p
+            object_list.append(graspit_msgs.msg.ObjectInfo(
+                                                  model.object_name, model.model_name, p))
+            scene_msg.objects = object_list
+            self.graspit_scene_publisher.publish(scene_msg)def publish_table_models(self):
+            ""
+            @brief - Publishes only the objects that are in a prism above the table to GraspIt                
+            ""
+
+            #Republish all of the object pose TFs
+            self.model_manager()
+
+            #get a list of models in that cube above the table
+            table_models = [model for model in self.model_manager.model_list
+                                if self.point_within_table_cube(model.get_world_pose().position)]
+
+            #Print a list of rejected models to the terminal
+            print '\ n'.join(['Model rejected %'s''%(model.object_name)
+                                for model in self.model_manager.model_list if model not in table_models])
+                
+            #For each model in the valid model list, add the model to the object list
+            #and publish it to GraspIt!
+            #FIXME -- needs to use scene message
+            object_list = []
+            scene_msg = graspit_msgs.msg.SceneInfo()
+            for model in table_models:
+                model()
+                
+                p = model.get_world_pose()
+                print "Model name: %'s'"%(model.object_name)
+                print p
+                object_list.append(graspit_msgs.msg.ObjectInfo(
+                                                      model.object_name, model.model_name, p))
+            scene_msg.objects = object_list
+            self.graspit_scene_publisher.publish(scene_msg)
+
+    def point_within_table_cube(self, test_point):
+        ""
+        @brief - Test whether a point is within a cube defined by its
+        lower left and upper right corners. The corners are stored in the table_cube
+        member. 
+
+        FIXME - This implementation is likely slow and dumb, but it works for me. 
+
+        @param test_point - The point to test
+        ""
+        [min_corner_point , max_corner_point ] = self.table_cube 
+        keys = ['x', 'y', 'z']
+        for k in keys:
+            t = getattr(test_point, k)
+            min_test = getattr(min_corner_point, k)
+            max_test = getattr(max_corner_point, k)
+            if t < min_test or t > max_test:
+                print 'Failed to be inside table in key %'s' - min - %'f' max - %'f' value %'f''%(k, min_test, max_test, t)
+                return False
+        return True
+    """
+>>>>>>> 8057641375fa6c671b2ce454fc2e5baa8a7014ae

@@ -25,7 +25,11 @@ flashlight_file_name = get_path('object_models','darpaflashlight.iv')
 large_shaving_gel_file_name = get_path('object_models','gillette_shaving_gel.ply')
 coke_file_name = get_path('object_models','coke_can.iv')
 odwalla_file_name = get_path('object_models','odwalla_bottle.iv')
+<<<<<<< HEAD
 all_file_name = get_path('object_models','all.stl')
+=======
+all_file_name = get_path('object_models','all.iv')
+>>>>>>> 8057641375fa6c671b2ce454fc2e5baa8a7014ae
 garnier_file_name = get_path('object_models','garnier_shampoo_bottle.ply')
 gillette_file_name = get_path('object_models','gillette_shaving_gel.ply')
 milk_carton_file_name = get_path('object_models','milk_carton.ply')
