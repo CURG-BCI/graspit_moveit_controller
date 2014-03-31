@@ -6,13 +6,6 @@ from WorldManager import WorldManager
 from ReachabilityChecker import ReachabilityChecker
 from MovementExecutor import MovementExecutor
 
-#HAO = False
-#def Hao():
-#	import hao
-#	if HAO:
-#		hao = HAO()
-#		return False
-
 
 if __name__ == '__main__':
 	moveGroupName = rospy.get_param('moveGroupName')

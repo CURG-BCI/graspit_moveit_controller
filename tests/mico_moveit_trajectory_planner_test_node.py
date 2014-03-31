@@ -49,7 +49,8 @@ class TestTrajectoryPlanner(unittest.TestCase):
 		meshPose.pose.position.z = 0.6
 
 		add_autoscaled_mesh = rospy.ServiceProxy('moveit_trajectory_planner/add_autoscaled_mesh', MeshInfo)
-		add_autoscaled_mesh(meshPose, "/home/jaredweiss/Desktop/cgdb/model_database/clorox.ply", "mesh1")
+
+		add_autoscaled_mesh(meshPose, roslib.packages.get_pkg_dir('object_models') + "/models/cgdb/model_database/clorox.ply", "mesh1")
 
 		self.assertTrue(True)
 
