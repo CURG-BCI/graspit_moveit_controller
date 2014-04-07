@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(moveit_trajectory_planner)
 
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation geometry_msgs trajectory_msgs moveit_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
+                                        trajectory_msgs moveit_msgs geometry_msgs graspit_msgs model_rec2)
+
 
 
 ## Generate services in the 'srv' folder
@@ -20,6 +22,9 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
    geometry_msgs
    trajectory_msgs
    moveit_msgs
+   geometry_msgs
+   graspit_msgs
+   model_rec2
  )
 
 catkin_package()
