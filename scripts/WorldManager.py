@@ -22,23 +22,19 @@ class WorldManager:
     def __init__(self):
         moveit_commander.roscpp_initialize(sys.argv)
         self.scene = ExtendedPlanningSceneInterface()
-<<<<<<< HEAD
-
-=======
         self.robot = moveit_commander.RobotCommander()
         
->>>>>>> 8057641375fa6c671b2ce454fc2e5baa8a7014ae
         #init the server node
-        s1 = rospy.Service('moveit_trajectory_planner/add_box', BoxInfo, self.handle_add_box)
-        s2 = rospy.Service('moveit_trajectory_planner/add_autoscaled_mesh', MeshInfo, self.handle_add_autoscaled_mesh)
-        s3 = rospy.Service('moveit_trajectory_planner/remove_object', ObjectName, self.handle_remove_object)
+        self.add_box_server = rospy.Service('moveit_trajectory_planner/add_box', BoxInfo, self.handle_add_box)
+        self.add_autoscaled_mesh_server = rospy.Service('moveit_trajectory_planner/add_autoscaled_mesh', MeshInfo, self.handle_add_autoscaled_mesh)
+        self.remove_object_server = rospy.Service('moveit_trajectory_planner/remove_object', ObjectName, self.handle_remove_object)
 
         #model_rec_manager for all the objects in the enviornment
         self.model_manager = ModelRecManager()
         self.body_name_cache = [] #a cache of all of the object names in the enviorment, for use with remove_all_objects
 
-        s4 = rospy.Service('model_manager/refresh_model_list', Empty, self.refresh_model_list)
-        s5 = rospy.Service('model_manager/reload_model_list', Empty, self.reload_model_list)
+        self.refresh_model_list_server = rospy.Service('model_manager/refresh_model_list', Empty, self.refresh_model_list)
+        self.reload_model_list_server = rospy.Service('model_manager/reload_model_list', Empty, self.reload_model_list)
 
     def handle_add_box(self, req):
         box_dimensions = (req.sizeX,req.sizeY,req.sizeZ);
@@ -100,23 +96,17 @@ class WorldManager:
             if(os.path.isfile(file_name_dict[model.model_name.strip('/')])):
                 stampedModelPose = geometry_msgs.msg.PoseStamped()
                 stampedModelPose.header.frame_id = self.robot.get_planning_frame()
-<<<<<<< HEAD
-                stampedModelPose.pose = model.pose
-                self.scene.add_mesh_autoscaled(model.object_name.strip('/'), stampedModelPose, file_name_dict[model.model_name.strip('/')])
-=======
+
                 print "============================="
                 print "adding:"
                 print model.object_name.strip('/')
                 stampedModelPose.pose = model.pose
                 self.scene.add_mesh_autoscaled(model.object_name.strip('/'), stampedModelPose, file_name_dict[model.model_name.strip('/')])
                 print "============================="
->>>>>>> 8057641375fa6c671b2ce454fc2e5baa8a7014ae
             else:
                 warn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
 
             self.body_name_cache.append(model.object_name.strip('/'))
-<<<<<<< HEAD
-=======
 
 
     """
@@ -204,4 +194,4 @@ class WorldManager:
                 return False
         return True
     """
->>>>>>> 8057641375fa6c671b2ce454fc2e5baa8a7014ae
+
