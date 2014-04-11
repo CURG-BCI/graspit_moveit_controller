@@ -80,7 +80,43 @@ class GraspExecutor():
         joint_positions[8] = positions[3]/3.0
 
         return joint_names, joint_positions
-        
+
+
+
+    def graspit_grasp_to_moveit_grasp(self, grasp_msg):
+        #Convert the grasp message to a transform
+        grasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.final_grasp_pose))
+        grasp_tran[0:3,3] /=1000 #mm to meters
+
+        pregrasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.pre_grasp_pose))
+        pregrasp_tran[0:3,3] /=1000 #mm to meters
+
+        pregrasp_dist = linalg.norm(pregrasp_tran[0:3,3] - grasp_tran[0:3,3])
+
+        grasp = moveit_msgs.msg.Grasp()
+        grasp.allowed_touch_objects = False
+        grasp.grasp_pose.pose = grasp_msg.final_grasp_pose
+        goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
+
+        spread_pregrasp_dof = [0,0,0,graspit_msgs.msg.Grasp.pre_grasp_dof[3]]
+
+        joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(spread_pregrasp_dof)
+        grasp.pregrasp_posture.points.append(goal_point)
+        joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.pre_grasp_dof)
+        grasp.grasp_posture.points.append(goal_point)
+
+        grasp.pre_grasp_approach.direction.vector = geometry_msgs.msg.Vector3(0,0,1)
+        grasp.pre_grasp_approach.direction.header.frame_id = self.grasp_tran_frame_name
+        grasp.pre_grasp_approach.desired_distance = pregrasp_dist
+        grasp.pre_grasp_approach.min_distance = pregrasp_dist
+
+        grasp.post_grasp_retreat.min_distance = .05
+        grasp.post_grasp_retreat.desired_distance = .05
+        grasp.post_grasp_retreat.direction.header.frame_id = '/world'
+        grasp.post_grasp_retreat.direction.vector = geometry_msgs.msg.Vector3(0,0,1)
+
+
+
 
     def process_grasp_msg(self, grasp_msg):
         """@brief - Attempt to grasp the object and lift it
@@ -127,59 +163,30 @@ class GraspExecutor():
 
                 
             if success:
-                #Pregrasp the object
-                    
-                #Convert the grasp message to a transform
-                grasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.final_grasp_pose))
-                grasp_tran[0:3,3] /=1000 #mm to meters
+                #Preshape the hand to the grasps' spread angle
 
-                pregrasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.pre_grasp_pose))
-                pregrasp_tran[0:3,3] /=1000 #mm to meters
-
-                pregrasp_dist = linalg.norm(pregrasp_tran[0:3,3] - grasp_tran[0:3,3])
-
-                #Move the hand to the pregrasp spread angle
                 if self.robot_running:
-                    tp.MoveHandSrv(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
+                    success = tp.MoveHandSrv(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
                     print 'pre-grasp'
+                    #Pregrasp the object
+                    if not success:
+                        grasp_status_msg = "Failed to preshape hand"
 
-
-
-                grasp = moveit_msgs.msg.Grasp()
-                grasp.allowed_touch_objects = False
-                grasp.grasp_pose.pose = grasp_msg.final_grasp_pose
-                goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-
-                joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.pre_grasp_dof)
-                grasp.pregrasp_posture.points.append(goal_point)
-                joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.final_grasp_dof)
-                grasp.grasp_posture.points.append(goal_point)
-
-                grasp.pre_grasp_approach.direction.vector = geometry_msgs.msg.Vector3(0,0,1)
-                grasp.pre_grasp_approach.direction.header.frame_id = self.grasp_tran_frame_name
-                grasp.pre_grasp_approach.desired_distance = pregrasp_dist
-                grasp.pre_grasp_approach.min_distance = pregrasp_dist
-
-                grasp.post_grasp_retreat.min_distance = .05
-                grasp.post_grasp_retreat.desired_distance = .05
-                grasp.post_grasp_retreat.direction.header.frame_id = '/world'
-                grasp.post_grasp_retreat.direction.vector = geometry_msgs.msg.Vector3(0,0,1)
-
-                success = self.group.pick(grasp_msg.object_name, grasp)
-
+            if success:
+                #Move to the goal location and grasp object
+                moveit_grasp_msg = graspit_grasp_to_moveit_grasp(grasp_msg)
+                success = self.group.pick(grasp_msg.object_name, moveit_grasp_msg)
+                if not success:
+                    grasp_status_msg = "MoveIt Failed to plan pick"
 
             #Failures shouldn't happen if grasp analysis is being used, so that's wierd.
             if not success:
                 pdb.set_trace()
-            else:
-                success, grasp_status_msg, joint_angles = tp.move_hand([grasp_msg.pre_grasp_dof[1],grasp_msg.pre_grasp_dof[2], grasp_msg.pre_grasp_dof[3], grasp_msg.pre_grasp_dof[0]])
-
 
             if success:
                 #Close the hand completely until the motors stall or they hit
                 #the final grasp DOFS
                 success, grasp_status_msg, joint_angles = tp.move_hand([grasp_msg.final_grasp_dof[1],grasp_msg.final_grasp_dof[2], grasp_msg.final_grasp_dof[3], grasp_msg.final_grasp_dof[0]])
-
 
             if success:
                 #Now close the hand completely until the motors stall.
