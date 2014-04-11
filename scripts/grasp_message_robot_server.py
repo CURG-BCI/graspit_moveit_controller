@@ -122,7 +122,10 @@ class GraspExecutor():
 
             if success:
                 #Move to the goal location and grasp object
-                success = self.group.pick(grasp_msg.object_name, moveit_grasp_msg)
+                moveit_grasp_msg = convert_graspit_msg.graspit_grasp_to_moveit_grasp(grasp_msg)
+                result = self.group.pick(grasp_msg.object_name, moveit_grasp_msg)
+                result = moveit_msgs.msg.MoveItErrorCodes(result)
+                success = result.val == result.SUCCESS
                 if not success:
                     grasp_status_msg = "MoveIt Failed to plan pick"
 
