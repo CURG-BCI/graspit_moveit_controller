@@ -17,13 +17,14 @@ import WorldManager
 
 import moveit_commander
 
-
+import roslib
+roslib.load_manifest('trajectory_planner')
 import trajectory_planner as tp
 import sys
 import moveit_msgs.msg
 import trajectory_msgs
-
 import convert_graspit_msg
+import ReachabilityChecker
 #import grasp_analyzer
 
 Hao = False
@@ -41,7 +42,7 @@ class GraspExecutor():
 
     def __init__(self, init_planner = True, moveGroupName='StaubliArm', grasp_tran_frame_name = 'wam/bhand/approach_tran'):
         self.grasp_listener = rospy.Subscriber("/graspit/grasps", graspit_msgs.msg.Grasp, self.process_grasp_msg)
-
+        self.reachability_checker = ReachabilityChecker.ReachabilityChecker()
         self.graspit_status_publisher = rospy.Publisher("/graspit/status", graspit_msgs.msg.GraspStatus)
 
         self.last_grasp_time = 0
