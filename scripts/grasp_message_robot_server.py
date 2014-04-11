@@ -134,19 +134,19 @@ class GraspExecutor():
             if not success:
                 pdb.set_trace()
 
-            if success:
+            if success and self.robot_running:
                 #Close the hand completely until the motors stall or they hit
                 #the final grasp DOFS
                 success, grasp_status_msg, joint_angles = tp.move_hand([grasp_msg.final_grasp_dof[1],grasp_msg.final_grasp_dof[2], grasp_msg.final_grasp_dof[3], grasp_msg.final_grasp_dof[0]])
 
-            if success:
+            if success and self.robot_running:
                 #Now close the hand completely until the motors stall.
                 success, grasp_status_msg, joint_angles = tp.close_barrett()
                 if not success:
                     grasp_status = graspit_msgs.msg.GraspStatus.ROBOTERROR
 
             #Now wait for user input on whether or not to lift the object
-            if success:
+            if success and self.robot_running:
                 selection = int(raw_input('Lift up (1) or not (0): '))
                 if selection == 1:
                     print 'lift up the object'
