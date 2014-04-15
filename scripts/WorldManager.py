@@ -49,7 +49,7 @@ class WorldManager:
         if(os.path.isfile(req.filename)):
             self.scene.add_mesh_autoscaled(req.name, req.pose, req.filename)
         else:
-            warn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
+            print('File doesn\'t exist - object %s, filename %s'%(req.name, req.filename))
         return MeshInfoResponse()
 
     def handle_remove_object(self, req):
@@ -104,7 +104,7 @@ class WorldManager:
                 self.scene.add_mesh_autoscaled(model.object_name.strip('/'), stampedModelPose, file_name_dict[model.model_name.strip('/')])
                 print "============================="
             else:
-                warn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
+                print('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
 
             self.body_name_cache.append(model.object_name.strip('/'))
 
