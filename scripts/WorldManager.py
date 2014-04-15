@@ -49,7 +49,8 @@ class WorldManager:
         if(os.path.isfile(req.filename)):
             self.scene.add_mesh_autoscaled(req.name, req.pose, req.filename)
         else:
-            print('File doesn\'t exist - object %s, filename %s'%(req.name, req.filename))
+            rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
+
         return MeshInfoResponse()
 
     def handle_remove_object(self, req):
@@ -93,20 +94,22 @@ class WorldManager:
         @brief - Adds all of the models in the model_rec_manager to moveit enviornment and adds names to cache
         """
         for model in self.model_manager.model_list:
-            if(os.path.isfile(file_name_dict[model.model_name.strip('/')])):
+            object_name = model.model_name.strip('/')
+            filename = file_name_dict[object_name]
+            if(os.path.isfile(filename)):
                 stampedModelPose = geometry_msgs.msg.PoseStamped()
                 stampedModelPose.header.frame_id = self.robot.get_planning_frame()
 
                 print "============================="
                 print "adding:"
-                print model.object_name.strip('/')
+                print object_name
                 stampedModelPose.pose = model.pose
-                self.scene.add_mesh_autoscaled(model.object_name.strip('/'), stampedModelPose, file_name_dict[model.model_name.strip('/')])
+                self.scene.add_mesh_autoscaled(object_name, stampedModelPose, filename)
                 print "============================="
             else:
-                print('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
+                rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
 
-            self.body_name_cache.append(model.object_name.strip('/'))
+            self.body_name_cache.append(object_name)
 
 
     """

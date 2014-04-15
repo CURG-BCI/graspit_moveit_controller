@@ -17,12 +17,14 @@ import WorldManager
 
 import moveit_commander
 
-
+import roslib
+roslib.load_manifest('trajectory_planner')
 import trajectory_planner as tp
 import sys
 import moveit_msgs.msg
 import trajectory_msgs
-
+import convert_graspit_msg
+import ReachabilityChecker
 #import grasp_analyzer
 
 Hao = False
@@ -40,7 +42,7 @@ class GraspExecutor():
 
     def __init__(self, init_planner = True, moveGroupName='StaubliArm', grasp_tran_frame_name = 'wam/bhand/approach_tran'):
         self.grasp_listener = rospy.Subscriber("/graspit/grasps", graspit_msgs.msg.Grasp, self.process_grasp_msg)
-
+        self.reachability_checker = ReachabilityChecker.ReachabilityChecker()
         self.graspit_status_publisher = rospy.Publisher("/graspit/status", graspit_msgs.msg.GraspStatus)
 
         self.last_grasp_time = 0
@@ -63,24 +65,7 @@ class GraspExecutor():
 
 
 
-    def barrett_positions_from_graspit_positions(self, positions):
-        names = ['/finger_1/prox_link','/finger_1/med_link','/finger_1/dist_link',
-                 '/finger_2/prox_link','/finger_2/med_link','/finger_2/dist_link',
-                 '/finger_3/med_link','/finger_3/dist_link']
-        prefix_str = 'wam/bhand/'
-        joint_names = [prefix_str + name for name in names]
-        joint_positions = zeros([len(names),1])
-        joint_positions[0] = positions[0]
-        joint_positions[1] = positions[1]
-        joint_positions[2] = positions[1]/3.0
-        joint_positions[3] = positions[0]
-        joint_positions[4] = positions[2]
-        joint_positions[5] = positions[2]/3.0
-        joint_positions[7] = positions[3]
-        joint_positions[8] = positions[3]/3.0
 
-        return joint_names, joint_positions
-        
 
     def process_grasp_msg(self, grasp_msg):
         """@brief - Attempt to grasp the object and lift it
@@ -127,68 +112,41 @@ class GraspExecutor():
 
                 
             if success:
-                #Pregrasp the object
-                    
-                #Convert the grasp message to a transform
-                grasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.final_grasp_pose))
-                grasp_tran[0:3,3] /=1000 #mm to meters
+                #Preshape the hand to the grasps' spread angle
 
-                pregrasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.pre_grasp_pose))
-                pregrasp_tran[0:3,3] /=1000 #mm to meters
-
-                pregrasp_dist = linalg.norm(pregrasp_tran[0:3,3] - grasp_tran[0:3,3])
-
-                #Move the hand to the pregrasp spread angle
                 if self.robot_running:
-                    tp.MoveHandSrv(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
+                    success = tp.MoveHandSrv(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
                     print 'pre-grasp'
+                    #Pregrasp the object
+                    if not success:
+                        grasp_status_msg = "Failed to preshape hand"
 
-
-
-                grasp = moveit_msgs.msg.Grasp()
-                grasp.allowed_touch_objects = False
-                grasp.grasp_pose.pose = grasp_msg.final_grasp_pose
-                goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-
-                joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.pre_grasp_dof)
-                grasp.pregrasp_posture.points.append(goal_point)
-                joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.final_grasp_dof)
-                grasp.grasp_posture.points.append(goal_point)
-
-                grasp.pre_grasp_approach.direction.vector = geometry_msgs.msg.Vector3(0,0,1)
-                grasp.pre_grasp_approach.direction.header.frame_id = self.grasp_tran_frame_name
-                grasp.pre_grasp_approach.desired_distance = pregrasp_dist
-                grasp.pre_grasp_approach.min_distance = pregrasp_dist
-
-                grasp.post_grasp_retreat.min_distance = .05
-                grasp.post_grasp_retreat.desired_distance = .05
-                grasp.post_grasp_retreat.direction.header.frame_id = '/world'
-                grasp.post_grasp_retreat.direction.vector = geometry_msgs.msg.Vector3(0,0,1)
-
-                success = self.group.pick(grasp_msg.object_name, grasp)
-
+            if success:
+                #Move to the goal location and grasp object
+                moveit_grasp_msg = convert_graspit_msg.graspit_grasp_to_moveit_grasp(grasp_msg)
+                result = self.group.pick(grasp_msg.object_name, moveit_grasp_msg)
+                result = moveit_msgs.msg.MoveItErrorCodes(result)
+                success = result.val == result.SUCCESS
+                if not success:
+                    grasp_status_msg = "MoveIt Failed to plan pick"
 
             #Failures shouldn't happen if grasp analysis is being used, so that's wierd.
             if not success:
                 pdb.set_trace()
-            else:
-                success, grasp_status_msg, joint_angles = tp.move_hand([grasp_msg.pre_grasp_dof[1],grasp_msg.pre_grasp_dof[2], grasp_msg.pre_grasp_dof[3], grasp_msg.pre_grasp_dof[0]])
 
-
-            if success:
+            if success and self.robot_running:
                 #Close the hand completely until the motors stall or they hit
                 #the final grasp DOFS
                 success, grasp_status_msg, joint_angles = tp.move_hand([grasp_msg.final_grasp_dof[1],grasp_msg.final_grasp_dof[2], grasp_msg.final_grasp_dof[3], grasp_msg.final_grasp_dof[0]])
 
-
-            if success:
+            if success and self.robot_running:
                 #Now close the hand completely until the motors stall.
                 success, grasp_status_msg, joint_angles = tp.close_barrett()
                 if not success:
                     grasp_status = graspit_msgs.msg.GraspStatus.ROBOTERROR
 
             #Now wait for user input on whether or not to lift the object
-            if success:
+            if success and self.robot_running:
                 selection = int(raw_input('Lift up (1) or not (0): '))
                 if selection == 1:
                     print 'lift up the object'
