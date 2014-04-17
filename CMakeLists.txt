@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
    BoxInfo.srv
    MeshInfo.srv
    ObjectName.srv
+
  )
  
 ## Generate added messages and services with any dependencies listed here

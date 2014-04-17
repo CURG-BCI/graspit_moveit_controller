@@ -27,7 +27,7 @@ def barrett_positions_from_graspit_positions(self, positions):
         return joint_names, joint_positions
 
 
-def graspit_grasp_to_moveit_grasp(self, grasp_msg):
+def graspit_grasp_to_moveit_grasp(grasp_msg):
     grasp_msg = graspit_msgs.msg.Grasp(grasp_msg)
     #Convert the grasp message to a transform
     grasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.final_grasp_pose))
@@ -45,9 +45,9 @@ def graspit_grasp_to_moveit_grasp(self, grasp_msg):
 
     spread_pregrasp_dof = [0,0,0,graspit_msgs.msg.Grasp.pre_grasp_dof[3]]
 
-    joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(spread_pregrasp_dof)
+    joint_names, goal_point.positions = barrett_positions_from_graspit_positions(spread_pregrasp_dof)
     grasp.pregrasp_posture.points.append(goal_point)
-    joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.pre_grasp_dof)
+    joint_names, goal_point.positions = barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.pre_grasp_dof)
     grasp.grasp_posture.points.append(goal_point)
 
     grasp.pre_grasp_approach.direction.vector = geometry_msgs.msg.Vector3(0,0,1)

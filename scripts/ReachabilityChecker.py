@@ -18,7 +18,8 @@ from math import acos
 import std_msgs.msg
 
 
-from moveit_trajectory_planner.srv import *
+import graspit_msgs.srv
+import moveit_trajectory_planner.srv
 import actionlib
 
 
@@ -32,10 +33,12 @@ class ReachabilityChecker(object):
         self.max_data_len = 5000
         self.array_data = []
         self.grasp_classes = []
-        self.analyze_grasp_subscriber = rospy.Subscriber(analyze_grasp_topic, graspit_msgs.msg.Grasp, self.analyze_grasp, queue_size = 1)
-        self.analyze_pose_subscriber = rospy.Subscriber(demo_pose_topic, graspit_msgs.msg.Grasp, self.analyze_demonstration_pose, queue_size = 1)
-        self.grasp_analysis_publisher = rospy.Publisher(analyze_grasp_topic + "_results", graspit_msgs.msg.GraspStatus)
-        self.demo_pose_analysis_publisher = rospy.Publisher(demo_pose_topic + "_results", std_msgs.msg.Float32)
+        #self.analyze_grasp_subscriber = rospy.Subscriber(analyze_grasp_topic, graspit_msgs.msg.Grasp, self.analyze_grasp, queue_size = 1)
+        self.analyze_grasp_service = rospy.Service("moveit_trajectory_planner/check_reachability" , moveit_trajectory_planner.srv.LocationInfo, self.analyze_grasp_service)
+        #self.analyze_pose_subscriber = rospy.Subscriber(demo_pose_topic, graspit_msgs.msg.Grasp, self.analyze_demonstration_pose, queue_size = 1)
+        self.analyze_pose_service = rospy.Service("moveit_trajectory_planner/analyze_pose", graspit_msgs.srv.AnalyzePose, self.analyze_demonstration_pose)
+        #self.grasp_analysis_publisher = rospy.Publisher(analyze_grasp_topic + "_results", graspit_msgs.msg.GraspStatus)
+        #self.demo_pose_analysis_publisher = rospy.Publisher(demo_pose_topic + "_results", std_msgs.msg.Float32)
 
         #setting up enviornment
         moveit_commander.roscpp_initialize(sys.argv)
@@ -70,9 +73,7 @@ class ReachabilityChecker(object):
 
     def handle_reachability_callback(self, graspit_grasp_msg):
 
-
-        graspit_grasp_msg = graspit_msgs.msg.Grasp(graspit_grasp_msg)
-        moveit_grasp_msg = moveit_msgs.msg.Grasp(convert_graspit_msg(graspit_grasp_msg))
+        moveit_grasp_msg = moveit_msgs.msg.Grasp(convert_graspit_msg.graspit_grasp_to_moveit_grasp(graspit_grasp_msg))
         try:
             self.pick_plan_client.wait_for_server(rospy.Duration(0))
         except Exception as e:
@@ -100,11 +101,10 @@ class ReachabilityChecker(object):
 
 
 
-    def analyze_demonstration_pose(self, demo_grasp):
+    def analyze_demonstration_pose(self, demo_pose):
         if(len(self.data) ==0):
             return 1.0
 
-        demo_pose = pm.toMatrix(pm.fromMsg(demo_grasp.final_grasp_pose))
         demo_position = demo_pose[:3,3]
 
         distances, indices = self.model.kneighbors(demo_position)
@@ -120,7 +120,6 @@ class ReachabilityChecker(object):
             success_probability = len([n for n in valid_nbrs if n[1] & 1])/(1.0*len(valid_nbrs))
         else:
             success_probability = 0
-        self.demo_pose_analysis_publisher.publish(success_probability)
         return success_probability
 
 
@@ -142,11 +141,11 @@ class ReachabilityChecker(object):
 
 
 
-    def analyze_grasp(self, grasp_msg):
+    def analyze_grasp_service(self, grasp_msg):
         success, result = self.handle_reachability_callback(grasp_msg)
         #success == None implies the analysis itself failed to run. Do nothing for now.
         if success == []:
-            return
+            return False
 
         gs = graspit_msgs.msg.GraspStatus()
         if not success:
@@ -157,10 +156,7 @@ class ReachabilityChecker(object):
         gs.grasp_status = success | result.error_code.val
 
         self.train_model(grasp_msg, gs.grasp_status)
-        self.grasp_analysis_publisher.publish(gs)
-
-
-
+        return success
 
 
 
