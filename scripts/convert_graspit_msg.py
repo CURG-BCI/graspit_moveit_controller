@@ -54,12 +54,11 @@ def graspit_grasp_to_moveit_grasp(grasp_msg, grasp_tran_frame_name='wam/bhand/ap
     grasp.allowed_touch_objects = False
     grasp.grasp_pose.pose = grasp_msg.final_grasp_pose
     goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
+    spread_pregrasp_dof = [0, 0, 0, grasp_msg.pre_grasp_dof[3]]
 
-    spread_pregrasp_dof = [0,0,0,graspit_msgs.msg.Grasp.pre_grasp_dof[3]]
-
-    joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(spread_pregrasp_dof)
-    grasp.pregrasp_posture.points.append(goal_point)
-    joint_names, goal_point.positions = self.barrett_positions_from_graspit_positions(graspit_msgs.msg.Grasp.pre_grasp_dof)
+    joint_names, goal_point.positions = barrett_positions_from_graspit_positions(spread_pregrasp_dof)
+    grasp.pre_grasp_posture.points.append(goal_point)
+    joint_names, goal_point.positions = barrett_positions_from_graspit_positions(grasp_msg.pre_grasp_dof)
     grasp.grasp_posture.points.append(goal_point)
 
     grasp.pre_grasp_approach.direction.vector = geometry_msgs.msg.Vector3(0, 0, 1)
