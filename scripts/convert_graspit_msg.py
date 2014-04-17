@@ -1,9 +1,10 @@
 __author__ = 'jweisz'
 import graspit_msgs.msg
 import tf_conversions.posemath as pm
-import moveit_msgs.msg.Grasp
-import numpy.zeros as zeros
-from numpy import linalg
+import moveit_msgs.msg
+import numpy as np
+#import numpy.zeros as zeros
+#from numpy import linalg
 
 import trajectory_msgs
 
@@ -13,7 +14,7 @@ def barrett_positions_from_graspit_positions(self, positions):
                  '/finger_3/med_link','/finger_3/dist_link']
         prefix_str = 'wam/bhand/'
         joint_names = [prefix_str + name for name in names]
-        joint_positions = zeros([len(names),1])
+        joint_positions = np.zeros([len(names),1])
         joint_positions[0] = positions[0]
         joint_positions[1] = positions[1]
         joint_positions[2] = positions[1]/3.0
@@ -35,7 +36,7 @@ def graspit_grasp_to_moveit_grasp(self, grasp_msg):
     pregrasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.pre_grasp_pose))
     pregrasp_tran[0:3,3] /=1000 #mm to meters
 
-    pregrasp_dist = linalg.norm(pregrasp_tran[0:3,3] - grasp_tran[0:3,3])
+    pregrasp_dist = np.linalg.norm(pregrasp_tran[0:3,3] - grasp_tran[0:3,3])
 
     grasp = moveit_msgs.msg.Grasp()
     grasp.allowed_touch_objects = False

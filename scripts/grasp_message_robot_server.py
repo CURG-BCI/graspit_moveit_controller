@@ -19,7 +19,8 @@ import moveit_commander
 
 import roslib
 roslib.load_manifest('trajectory_planner')
-import trajectory_planner as tp
+#import trajectory_planner as tp
+import barrett_manager as tp
 import sys
 import moveit_msgs.msg
 import trajectory_msgs
@@ -27,7 +28,6 @@ import convert_graspit_msg
 import ReachabilityChecker
 #import grasp_analyzer
 
-Hao = False
 
 class GraspExecutor():
     """@brief - Generates a persistent converter between grasps published by a graspit commander and

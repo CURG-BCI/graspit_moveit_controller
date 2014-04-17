@@ -6,7 +6,8 @@ import unittest
 import time
 
 #additional imports for the service node
-import roslib; roslib.load_manifest('mico_moveit')
+import roslib;
+# roslib.load_manifest('mico_moveit')
 import rospy
 from moveit_trajectory_planner.srv import *
 import moveit_commander
