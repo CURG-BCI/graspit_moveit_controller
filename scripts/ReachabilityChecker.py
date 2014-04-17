@@ -12,7 +12,7 @@ import graspit_msgs
 from sklearn import *
 import rospy
 import random
-import trajectory_planner as tp
+
 import graspit_msgs.msg
 import itertools
 import tf_conversions.posemath as pm
