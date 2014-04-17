@@ -1,31 +1,23 @@
 #!/usr/bin/env python
-import roslib
+
+import pdb
+from time import time
+import sys
+
 import rospy
-import time
+
 import graspit_msgs.msg
 import geometry_msgs.msg
-import tf, tf_conversions, tf.transformations
-from numpy import pi, eye, dot, cross, linalg, sqrt, ceil, size, zeros
-from numpy import hstack, vstack, mat, array, arange, fabs
-import tf_conversions.posemath as pm
-from time import sleep 
-#import trajectory_planner as tp
-import pdb
-from std_msgs.msg import String, Empty
-from time import time
-import WorldManager
+import moveit_msgs.msg
 
 import moveit_commander
 
-import roslib
-
 import barrett_manager
 import staubli_manager
-import sys
-import moveit_msgs.msg
-import convert_graspit_msg
-import ReachabilityChecker
 
+import convert_graspit_msg
+import WorldManager
+import ReachabilityChecker
 
 
 class GraspExecutor():

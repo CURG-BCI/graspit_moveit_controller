@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import sys
-import copy
-import rospy
+
 import moveit_commander
 import moveit_msgs.msg
-import geometry_msgs.msg
-import shape_msgs.msg
+
 import convert_graspit_msg
 import graspit_msgs
 
@@ -16,13 +14,10 @@ import random
 import graspit_msgs.msg
 import itertools
 import tf_conversions.posemath as pm
-from numpy import pi, eye, dot, cross, linalg, sqrt, ceil, size
-from numpy import hstack, vstack, mat, array, arange, fabs, unique
 from math import acos
-import pdb
 import std_msgs.msg
 
-import roslib; roslib.load_manifest('moveit_trajectory_planner')
+
 from moveit_trajectory_planner.srv import *
 import actionlib
 
