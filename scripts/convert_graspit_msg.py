@@ -1,11 +1,12 @@
 __author__ = 'jweisz'
 import graspit_msgs.msg
 import tf_conversions.posemath as pm
-import moveit_msgs.msg.Grasp
-import numpy.zeros as zeros
+import moveit_msgs.msg
+from numpy import zeros
 from numpy import linalg
+import geometry_msgs.msg
 
-import trajectory_msgs
+import trajectory_msgs.msg
 
 def barrett_positions_from_graspit_positions(self, positions):
         names = ['/finger_1/prox_link','/finger_1/med_link','/finger_1/dist_link',
