@@ -32,6 +32,15 @@ def barrett_positions_from_graspit_positions(positions):
     joint_positions[8] = positions[3]/3.0
 
     return joint_names, joint_positions
+
+
+def graspit_grasp_to_moveit_grasp(grasp_msg, grasp_tran_frame_name='wam/bhand/approach_tran'):
+    """
+    :param grasp_msg: A graspit grasp message
+    :type grasp_msg: graspit_msgs.msg.Grasp
+    :returns a moveit message built from the graspit grasp
+    :rtype: moveit_msgs.msg.Grasp
+    """
     #Convert the grasp message to a transform
     grasp_tran = pm.toMatrix(pm.fromMsg(grasp_msg.final_grasp_pose))
     grasp_tran[0:3, 3] /= 1000      # mm to meters
