@@ -18,15 +18,14 @@ import WorldManager
 import moveit_commander
 
 import roslib
-roslib.load_manifest('trajectory_planner')
-#import trajectory_planner as tp
-import barrett_manager as tp
+
+import barrett_manager
+import staubli_manager
 import sys
 import moveit_msgs.msg
-import trajectory_msgs
 import convert_graspit_msg
 import ReachabilityChecker
-#import grasp_analyzer
+
 
 
 class GraspExecutor():
@@ -106,7 +105,7 @@ class GraspExecutor():
 
             #Open the hand - Leaves spread angle unchanged
             if success and self.robot_running:
-                success, grasp_status_msg, positions = tp.open_barrett()
+                success, grasp_status_msg, positions = barrett_manager.open_barrett()
                 if not success:
                     grasp_status = graspit_msgs.msg.GraspStatus.ROBOTERROR
 
@@ -115,7 +114,7 @@ class GraspExecutor():
                 #Preshape the hand to the grasps' spread angle
 
                 if self.robot_running:
-                    success = tp.MoveHandSrv(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
+                    success = barrett_manager.MoveHandSrv(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
                     print 'pre-grasp'
                     #Pregrasp the object
                     if not success:
@@ -137,11 +136,11 @@ class GraspExecutor():
             if success and self.robot_running:
                 #Close the hand completely until the motors stall or they hit
                 #the final grasp DOFS
-                success, grasp_status_msg, joint_angles = tp.move_hand([grasp_msg.final_grasp_dof[1],grasp_msg.final_grasp_dof[2], grasp_msg.final_grasp_dof[3], grasp_msg.final_grasp_dof[0]])
+                success, grasp_status_msg, joint_angles = barrett_manager.move_hand([grasp_msg.final_grasp_dof[1],grasp_msg.final_grasp_dof[2], grasp_msg.final_grasp_dof[3], grasp_msg.final_grasp_dof[0]])
 
             if success and self.robot_running:
                 #Now close the hand completely until the motors stall.
-                success, grasp_status_msg, joint_angles = tp.close_barrett()
+                success, grasp_status_msg, joint_angles = barrett_manager.close_barrett()
                 if not success:
                     grasp_status = graspit_msgs.msg.GraspStatus.ROBOTERROR
 
@@ -151,7 +150,7 @@ class GraspExecutor():
                 if selection == 1:
                     print 'lift up the object'
                     #Lift the object using the staubli's straight line path planner
-                    success = tp.lift_arm(.05, True)
+                    success = staubli_manager.lift_arm(.05, True)
                     if not success:
                         grasp_status = graspit_msgs.msg.GraspStatus.UNREACHABLE
                         grasp_status_msg = "Couldn't lift object"
