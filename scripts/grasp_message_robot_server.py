@@ -1,33 +1,28 @@
 #!/usr/bin/env python
-import roslib
+
 import rospy
-import time
+
 import graspit_msgs.msg
 import geometry_msgs.msg
-import tf, tf_conversions, tf.transformations
-from numpy import pi, eye, dot, cross, linalg, sqrt, ceil, size, zeros
-from numpy import hstack, vstack, mat, array, arange, fabs
-import tf_conversions.posemath as pm
-from time import sleep 
-#import trajectory_planner as tp
+
+from numpy import array
+
+
 import pdb
-from std_msgs.msg import String, Empty
 from time import time
 import WorldManager
 
 import moveit_commander
 
-import roslib
-roslib.load_manifest('trajectory_planner')
-import trajectory_planner as tp
+import barrett_manager 
 import sys
 import moveit_msgs.msg
-import trajectory_msgs
+
 import convert_graspit_msg
 import ReachabilityChecker
-#import grasp_analyzer
+import control_msgs.msg
+import actionlib
 
-Hao = False
 
 class GraspExecutor():
     """@brief - Generates a persistent converter between grasps published by a graspit commander and
