@@ -148,14 +148,11 @@ class ReachabilityChecker(object):
                 valid_nbrs.append(n)
 
         if len(valid_nbrs):
-            success_probability = len([n for n in valid_nbrs if n[1] & 1])/(1.0*len(valid_nbrs))
+            response.success_probability = len([n for n in valid_nbrs if n[1] & 1])/(1.0*len(valid_nbrs))
         else:
-            success_probability = 0
-        self.demo_pose_analysis_publisher.publish(success_probability)
-        return success_probability
+            response.success_probability = 0
 
-
-
+        return response
 
     def train_model(self, grasp, grasp_class):
 
