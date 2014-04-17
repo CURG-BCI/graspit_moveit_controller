@@ -85,31 +85,31 @@ class ReachabilityChecker(object):
         #goal.path_constraints = *path_constraints_;
         goal.possible_grasps = [graspit_grasp_msg]
         goal.planning_options.plan_only = True
-        goal.can_replan = False
-        goal.look_around = False
-        goal.replan_delay = 10.0
+        goal.planning_options.can_replan = False
+        goal.planning_options.look_around = False
+        goal.planning_options.replan_delay = 10.0
         goal.planning_options.planning_scene_diff = True
         goal.planning_options.robot_state.is_diff = True
 
         return goal
 
-
     def handle_reachability_callback(self, graspit_grasp_msg):
+        """
 
-
-        graspit_grasp_msg = graspit_msgs.msg.Grasp(graspit_grasp_msg)
-        moveit_grasp_msg = moveit_msgs.msg.Grasp(convert_graspit_msg(graspit_grasp_msg))
+        :type graspit_grasp_msg: graspit_msgs.msg.Grasp
+        """
+        moveit_grasp_msg = convert_graspit_msg.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,
+                                                                             self.grasp_approach_tran_frame)
         try:
             self.pick_plan_client.wait_for_server(rospy.Duration(0))
         except Exception as e:
             rospy.logerr("ReachabilityChecker::handle_reachability_callback::Failed to reach pick action server"
                          " with err: %s"%(e.message))
 
-
-        pickup_goal = self.construct_pickup_goal(graspit_grasp_msg)
+        pickup_goal = self.construct_pickup_goal(moveit_grasp_msg)
         self.pick_plan_client.send_goal(pickup_goal)
 
-        success = self.pick_plan_client.wait_for_result(rospy.Duration(10.0))
+        success = self.pick_plan_client.wait_for_result(rospy.Duration(10))
         result = []
         if success:
             result = self.pick_plan_client.get_result()
