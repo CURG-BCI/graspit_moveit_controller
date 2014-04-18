@@ -47,8 +47,7 @@ class GraspExecutor():
     def __init__(self, init_planner = True, moveGroupName='StaubliArm', grasp_tran_frame_name = 'wam/bhand/approach_tran'):
         self.grasp_listener = rospy.Subscriber("/graspit/grasps", graspit_msgs.msg.Grasp,
                                                self.process_grasp_msg)
-        self.reachability_checker = ReachabilityChecker.ReachabilityChecker(
-                                                                  grasp_approach_tran_frame=grasp_tran_frame_name)
+
         self.graspit_status_publisher = rospy.Publisher("/graspit/status", graspit_msgs.msg.GraspStatus)
 
         self.last_grasp_time = 0
@@ -320,7 +319,7 @@ if __name__ == '__main__':
 
         
         while not rospy.is_shutdown():
-            ge.wm.model_manager.rebroadcast_object_tfs()
+            #ge.wm.model_manager.rebroadcast_object_tfs()
             loop.sleep()
     except rospy.ROSInterruptException: pass
 

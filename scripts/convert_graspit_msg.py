@@ -61,7 +61,7 @@ def graspit_grasp_to_moveit_grasp(grasp_msg, grasp_tran_frame_name='wam/bhand/ap
     joint_names, goal_point.positions = barrett_positions_from_graspit_positions(spread_pregrasp_dof)
     grasp.pre_grasp_posture.points.append(goal_point)
     joint_names, goal_point.positions = barrett_positions_from_graspit_positions(grasp_msg.pre_grasp_dof)
-    grasp.pre_grasp_posture.joint_names - joint_names
+    grasp.pre_grasp_posture.joint_names = joint_names
     grasp.grasp_posture.joint_names = joint_names
 
     grasp.grasp_posture.points.append(goal_point)

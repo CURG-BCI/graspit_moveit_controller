@@ -47,7 +47,7 @@ class ReachabilityChecker(object):
         self.grasp_classes = []
 
 
-        self.analyze_grasp_service = rospy.Service(analyze_grasp_topic , moveit_trajectory_planner.srv.LocationInfo, self.analyze_grasp)
+        self.analyze_grasp_service = rospy.Service(analyze_grasp_topic, moveit_trajectory_planner.srv.LocationInfo, self.analyze_grasp)
         self.analyze_pose_service = rospy.Service(demo_pose_topic, graspit_msgs.srv.AnalyzePose, self.analyze_demonstration_pose)
 
         #setting up enviornment
@@ -57,14 +57,15 @@ class ReachabilityChecker(object):
         self.support_surface_ = ""
         self.planning_time_ = 2
         self.grasp_approach_tran_frame = grasp_approach_tran_frame
+        rospy.loginfo(self.__class__.__name__ + " is inited")
 
-    def construct_pickup_goal(self, graspit_grasp_msg):
+    def construct_pickup_goal(self, graspit_grasp_msg,object_name):
         """
         :type graspit_grasp_msg: moveit_msgs.msg.Grasp
         """
         goal = moveit_msgs.msg.PickupGoal()
 
-        goal.target_name = graspit_grasp_msg.object_name
+        goal.target_name = object_name
         goal.group_name = self.group.get_name()
         goal.end_effector = self.group.get_end_effector_link()
         goal.allowed_planning_time = self.planning_time_
@@ -75,35 +76,32 @@ class ReachabilityChecker(object):
         #goal.path_constraints = *path_constraints_;
         goal.possible_grasps = [graspit_grasp_msg]
         goal.planning_options.plan_only = True
-        goal.planning_options.can_replan = False
+        goal.planning_options.replan = False
         goal.planning_options.look_around = False
         goal.planning_options.replan_delay = 10.0
         goal.planning_options.planning_scene_diff = True
-        goal.planning_options.robot_state.is_diff = True
+        #goal.planning_options.robot_state.is_diff = True
 
         return goal
 
-    def handle_reachability_callback(self, location_info_req):
+    def handle_reachability_callback(self, graspit_grasp_msg):
         """
 
-        :type location_info_req: moveit_msgs.srv.LocationInfoRequest
+        :type graspit_grasp_msg: graspit_msgs.msg.Grasp
         """
-
-        graspit_grasp_msg = location_info_req.grasp
-
         moveit_grasp_msg = convert_graspit_msg.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,
                                                                              self.grasp_approach_tran_frame)
 
         try:
-            self.pick_plan_client.wait_for_server(rospy.Duration(0))
+            self.pick_plan_client.wait_for_server(rospy.Duration(3))
         except Exception as e:
             rospy.logerr("ReachabilityChecker::handle_reachability_callback::Failed to reach pick action server"
                          " with err: %s"%(e.message))
 
-        pickup_goal = self.construct_pickup_goal(moveit_grasp_msg)
+        pickup_goal = self.construct_pickup_goal(moveit_grasp_msg, graspit_grasp_msg.object_name)
         self.pick_plan_client.send_goal(pickup_goal)
 
-        success = self.pick_plan_client.wait_for_result(rospy.Duration(10))
+        success = self.pick_plan_client.wait_for_result(rospy.Duration(3))
         result = []
         if success:
             result = self.pick_plan_client.get_result()
@@ -162,14 +160,16 @@ class ReachabilityChecker(object):
     def sparcify_data(self):
         self.data = random.sample(self.data, len(self.data)/2.0)
 
-    def analyze_grasp(self, grasp_msg):
+    def analyze_grasp(self, location_info_req):
         """
-
-        @param grasp_msg: grasp message to analyze
-        @type grasp_msg: graspit_msgs.msg.Grasp
+        @param location_info_req: grasp message to analyze
+        :type location_info_req: moveit_msgs.srv.LocationInfoRequest
         @return: Whether the grasp is expected to succeed
         @rtype: bool
         """
+
+        rospy.loginfo(self.__class__.__name__ + " received analyze grasp request: " + str(location_info_req))
+        grasp_msg = location_info_req.grasp
         success, result = self.handle_reachability_callback(grasp_msg)
         #success == None implies the analysis itself failed to run. Do nothing for now.
         if success == []:
@@ -182,9 +182,29 @@ class ReachabilityChecker(object):
                                                                success, result.error_code.val)
             rospy.loginfo(gs.status_msg)
 
-        gs.grasp_identifier = grasp_msg.secondary_qualities[0]
-        gs.grasp_status = success | result.error_code.val
+        if grasp_msg.secondary_qualities:
+            gs.grasp_identifier = grasp_msg.secondary_qualities[0]
+
+        if result:
+            gs.grasp_status = success or result.error_code.val
+        else:
+            gs.grasp_status = success
 
         self.train_model(grasp_msg, gs.grasp_status)
 
-        return success
+        response = moveit_trajectory_planner.srv.LocationInfoResponse(success)
+        rospy.loginfo(self.__class__.__name__ + " finished analyze grasp request: " + str(response))
+        return response
+
+
+if __name__ == '__main__':
+
+    try:
+        rospy.init_node('graspit_reachability_checker')
+
+        reachability_checker = ReachabilityChecker()
+
+        loop = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            loop.sleep()
+    except rospy.ROSInterruptException: pass
