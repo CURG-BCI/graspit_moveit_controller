@@ -109,14 +109,9 @@ class ModelRecManager( object ):
         resp = find_objects_srv()
         self.model_list = list()
         for i in range(len(resp.object_name)):
-            special_names = ['snapple', 'krylon_spray', 'library_cup']
-            if resp.object_name[i] in special_names:
-                pose_modified = self.align_pose(resp.object_pose[i])
-            else:
-                pose_modified = resp.object_pose[i]
             self.model_list.append(ModelManager(resp.object_name[i],
                                                      resp.pointcloud[i],
-                                                     pose_modified))
+                                                     resp.object_pose[i]))
         for j in self.model_list:
              j.model_name = j.model_name
              j.point_cloud_data.header.frame_id='/' + j.model_name
@@ -153,10 +148,10 @@ class ModelRecManager( object ):
             marker.scale.y = .01
             marker.scale.z = .01
             marker.lifetime = rospy.Duration()
-            point_generator = point_cloud2.read_points(model.point_cloud_data, None, True)
-            marker.points = [geometry_msgs.msg.Point(point[0], point[1], point[2]) for point in point_generator]
-            marker.colors = [std_msgs.msg.ColorRGBA(1,1,1,1) for point in marker.points]
-            marker_array.markers.append(marker)
+            #point_generator = point_cloud2.read_points(model.point_cloud_data, None, True)
+            #marker.points = [geometry_msgs.msg.Point(point[0], point[1], point[2]) for point in point_generator]
+            #marker.colors = [std_msgs.msg.ColorRGBA(1,1,1,1) for point in marker.points]
+            #marker_array.markers.append(marker)
         pub = rospy.Publisher('/object_marker_array', visualization_msgs.msg.MarkerArray)
         pub.publish(marker_array) 
             
@@ -168,9 +163,13 @@ class ModelRecManager( object ):
         return [model.model_name for model in self.model_list]
 
     def get_object_info(self, req):
-        resp = graspit_msgs.srv.GetObjectInfoResponse
-        for model in model_list:
-            resp.object_info.append(graspit_msgs.msg.ObjectInfo(model.model_name, model.get_world_pose()))
+        resp = graspit_msgs.srv.GetObjectInfoResponse()
+        for model in self.model_list:
+            model_name = model.model_name
+            object_name = model.object_name
+            object_pose = model.get_world_pose()
+            object_info = graspit_msgs.msg.ObjectInfo(model_name, object_name, object_pose)
+            resp.object_info.append(object_info)
         return resp
         
     def uniquify_object_names(self):

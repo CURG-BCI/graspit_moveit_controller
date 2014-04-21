@@ -67,6 +67,8 @@ class WorldManager:
         #self.publish_table_models()
         self.remove_all_objects_from_planner()
         self.add_all_objects_to_planner()
+        #need to return [] for empty response
+        return []
 
     def reload_model_list(self, empty_msg):
         self.model_manager.read()
@@ -76,6 +78,10 @@ class WorldManager:
         #self.publish_table_models()
         self.remove_all_objects_from_planner()
         self.add_all_objects_to_planner()
+        return []
+
+    def get_model_list(self, empty_msg):
+        self.world_manager.read()
 
     def remove_all_objects_from_planner(self):
         """
@@ -84,10 +90,11 @@ class WorldManager:
         FIXME - Add additional obstacles for camera post and computers around robot
         and some way of annotating that they shouldn't be removed.
         """
-        for body_name in self.body_name_cache[:]:
+        for index in range(len(self.body_name_cache)):
+            body_name = self.body_name_cache[index]
             self.scene.remove_world_object(body_name)
-            del body_name_cache[index]
-            del body_name
+            #del self.body_name_cache[index]
+            #del body_name
 
     def add_all_objects_to_planner(self):
         """
