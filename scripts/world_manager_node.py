@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 import os
-import sys
-import copy
+
+import roslib
 import rospy
 import moveit_commander
-from extended_planning_scene_interface import ExtendedPlanningSceneInterface
-import moveit_msgs.msg
+
 import geometry_msgs.msg
-import shape_msgs.msg
-from model_rec_manager import *
-from object_filename_dict import file_name_dict #dictionary for all the mesh filenames
-
-
-#additional imports for the service node
-import roslib; roslib.load_manifest('moveit_trajectory_planner')
 from moveit_trajectory_planner.srv import *
 from std_srvs.srv import Empty
+
+from world_manager_helpers.extended_planning_scene_interface import ExtendedPlanningSceneInterface
+from world_manager_helpers.model_rec_manager import ModelManager, ModelRecManager
+from world_manager_helpers.object_filename_dict import file_name_dict
+
+roslib.load_manifest('moveit_trajectory_planner')
+
 
 class WorldManager:
 
@@ -31,7 +30,8 @@ class WorldManager:
 
         #model_rec_manager for all the objects in the enviornment
         self.model_manager = ModelRecManager()
-        self.body_name_cache = [] #a cache of all of the object names in the enviorment, for use with remove_all_objects
+        #a cache of all of the object names in the enviorment, for use with remove_all_objects
+        self.body_name_cache = []
 
         self.refresh_model_list_server = rospy.Service('model_manager/refresh_model_list', Empty, self.refresh_model_list)
         self.reload_model_list_server = rospy.Service('model_manager/reload_model_list', Empty, self.reload_model_list)
@@ -49,7 +49,7 @@ class WorldManager:
         if(os.path.isfile(req.filename)):
             self.scene.add_mesh_autoscaled(req.name, req.pose, req.filename)
         else:
-            rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
+            rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(req.name, req.filename))
 
         return MeshInfoResponse()
 
@@ -205,3 +205,14 @@ class WorldManager:
         return True
     """
 
+if __name__ == '__main__':
+
+    try:
+        rospy.init_node('world_manager_node')
+
+        world_manager = WorldManager()
+
+        loop = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            loop.sleep()
+    except rospy.ROSInterruptException: pass

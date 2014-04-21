@@ -1,36 +1,21 @@
 #!/usr/bin/env python
 
-import rospy
-
-import graspit_msgs.msg
-import geometry_msgs.msg
-import moveit_msgs.msg
-
-import moveit_commander
-
-import barrett_manager
-
-
+import sys
+from time import time
+import pdb
 from numpy import array
 
-
-import pdb
-from time import time
-import WorldManager
-
-import moveit_commander
-
-import barrett_manager 
-import sys
+import rospy
+import geometry_msgs.msg
 import moveit_msgs.msg
-
-
-import convert_graspit_msg
-import WorldManager
-import ReachabilityChecker
+import moveit_msgs.msg
 import control_msgs.msg
 import actionlib
+import moveit_commander
 
+import graspit_msgs.msg
+from grasp_execution_helpers import barrett_manager
+from common_helpers import convert_graspit_msg
 
 
 class GraspExecutor():
@@ -54,9 +39,6 @@ class GraspExecutor():
         self.table_cube=[geometry_msgs.msg.Point(-0.7,0,-0.02), geometry_msgs.msg.Point(0.2,1,1)]
         self.robot_running = init_planner
 
-        #start up WorldManager
-        self.wm = WorldManager.WorldManager()
-
         moveit_commander.roscpp_initialize(sys.argv)
 
         self.group = moveit_commander.MoveGroupCommander(moveGroupName)
@@ -70,7 +52,6 @@ class GraspExecutor():
         self.preshape_ratio = .5
 
 
-        #self.grasp_analyzer = grasp_analyzer.GraspAnalyzer(self.global_data)
         if bool(rospy.get_param('reload_model_rec',0)):
             self.reload_model_list([])
 
@@ -319,7 +300,6 @@ if __name__ == '__main__':
 
         
         while not rospy.is_shutdown():
-            #ge.wm.model_manager.rebroadcast_object_tfs()
             loop.sleep()
     except rospy.ROSInterruptException: pass
 

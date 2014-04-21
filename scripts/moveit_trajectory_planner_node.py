@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import time
 import rospy
-from WorldManager import WorldManager
-from ReachabilityChecker import ReachabilityChecker
-from MovementExecutor import MovementExecutor
+
+from world_manager_node import WorldManager
+from check_reachability_node import ReachabilityChecker
+from grasp_execution_helpers.movement_executor import MovementExecutor
 
 
 if __name__ == '__main__':

@@ -1,21 +1,21 @@
 #!/usr/bin/env python
-import moveit_commander
-import moveit_msgs.msg
-import convert_graspit_msg
-from sklearn import *
-import rospy
 import random
-import moveit_trajectory_planner.srv
-
-import graspit_msgs.msg
 import itertools
-import tf_conversions.posemath as pm
 from numpy import dot
 from numpy import array, unique
 from math import acos
 
-
+import moveit_commander
+import moveit_msgs.msg
+from sklearn import *
+import rospy
+import tf_conversions.posemath as pm
 import roslib
+
+import moveit_trajectory_planner.srv
+import graspit_msgs.msg
+from common_helpers import convert_graspit_msg
+
 roslib.load_manifest('moveit_trajectory_planner')
 import actionlib
 import graspit_msgs.srv
