@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import time
 
 import roslib
 import rospy
@@ -37,7 +38,7 @@ class WorldManager:
         self.reload_model_list_server = rospy.Service('model_manager/reload_model_list', Empty, self.reload_model_list)
 
     def handle_add_box(self, req):
-        box_dimensions = (req.sizeX,req.sizeY,req.sizeZ);
+        box_dimensions = (req.sizeX, req.sizeY, req.sizeZ);
         self.scene.add_box(req.name, req.pose, box_dimensions)
         return BoxInfoResponse()
 
@@ -205,12 +206,39 @@ class WorldManager:
         return True
     """
 
+def add_table(world_manager):
+
+    time.sleep(1)
+    rospy.wait_for_service('moveit_trajectory_planner/add_box')
+    frame_id = "/world"
+    rospy.loginfo("adding table in planning frame: " + str(frame_id))
+    boxPose = geometry_msgs.msg.PoseStamped()
+    boxPose.header.frame_id = frame_id
+    table_x = -.92
+    table_y = 1.22
+    table_z = .05
+    table_world_x_offset = .24
+    table_world_y_offset = -.19
+    table_world_z_offset = 0
+    boxPose.pose.position.x = table_x/2.0 + table_world_x_offset
+    boxPose.pose.position.y = table_y/2.0 + table_world_y_offset
+    boxPose.pose.position.z = table_z/2.0 + table_world_z_offset
+    boxPose.pose.orientation.x = 0
+    boxPose.pose.orientation.y = 0
+    boxPose.pose.orientation.z = 0
+    boxPose.pose.orientation.w = 0
+    box_dimensions = (table_x, table_y, table_z)
+
+    world_manager.scene.add_box("table", boxPose, box_dimensions)
+    rospy.loginfo("table added")
+
 if __name__ == '__main__':
 
     try:
         rospy.init_node('world_manager_node')
 
         world_manager = WorldManager()
+        add_table(world_manager)
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():
