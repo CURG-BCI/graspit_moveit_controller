@@ -212,24 +212,24 @@ def add_table(world_manager):
     rospy.wait_for_service('moveit_trajectory_planner/add_box')
     frame_id = "/world"
     rospy.loginfo("adding table in planning frame: " + str(frame_id))
-    boxPose = geometry_msgs.msg.PoseStamped()
-    boxPose.header.frame_id = frame_id
+    box_pose = geometry_msgs.msg.PoseStamped()
+    box_pose.header.frame_id = frame_id
     table_x = -.92
     table_y = 1.22
     table_z = .05
     table_world_x_offset = .24
     table_world_y_offset = -.19
     table_world_z_offset = 0
-    boxPose.pose.position.x = table_x/2.0 + table_world_x_offset
-    boxPose.pose.position.y = table_y/2.0 + table_world_y_offset
-    boxPose.pose.position.z = table_z/2.0 + table_world_z_offset
-    boxPose.pose.orientation.x = 0
-    boxPose.pose.orientation.y = 0
-    boxPose.pose.orientation.z = 0
-    boxPose.pose.orientation.w = 0
+    box_pose.pose.position.x = table_x/2.0 + table_world_x_offset
+    box_pose.pose.position.y = table_y/2.0 + table_world_y_offset
+    box_pose.pose.position.z = table_z/2.0 + table_world_z_offset
+    box_pose.pose.orientation.x = 0
+    box_pose.pose.orientation.y = 0
+    box_pose.pose.orientation.z = 0
+    box_pose.pose.orientation.w = 0
     box_dimensions = (table_x, table_y, table_z)
 
-    world_manager.scene.add_box("table", boxPose, box_dimensions)
+    world_manager.scene.add_box("table", box_pose, box_dimensions)
     rospy.loginfo("table added")
 
 if __name__ == '__main__':
