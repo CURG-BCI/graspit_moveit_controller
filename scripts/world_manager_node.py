@@ -24,17 +24,30 @@ class WorldManager:
         self.scene = ExtendedPlanningSceneInterface()
         self.robot = moveit_commander.RobotCommander()
 
-        self.add_box_server = rospy.Service('moveit_trajectory_planner/add_box', BoxInfo, self.handle_add_box)
-        self.add_autoscaled_mesh_server = rospy.Service('moveit_trajectory_planner/add_autoscaled_mesh', MeshInfo, self.handle_add_autoscaled_mesh)
-        self.remove_object_server = rospy.Service('moveit_trajectory_planner/remove_object', ObjectName, self.handle_remove_object)
-        self.refresh_model_list_server = rospy.Service('model_manager/refresh_model_list', Empty, self.refresh_model_list)
-        self.reload_model_list_server = rospy.Service('model_manager/reload_model_list', Empty, self.reload_model_list)
-
         #model_rec_manager for all the objects in the enviornment
         self.model_manager = ModelRecManager()
-
         #a cache of all of the object names in the enviorment, for use with remove_all_objects
         self.body_name_cache = []
+
+        self.add_box_server = rospy.Service('moveit_trajectory_planner/add_box',
+                                            BoxInfo,
+                                            self.handle_add_box)
+
+        self.add_autoscaled_mesh_server = rospy.Service('moveit_trajectory_planner/add_autoscaled_mesh',
+                                                        MeshInfo,
+                                                        self.handle_add_autoscaled_mesh)
+
+        self.remove_object_server = rospy.Service('moveit_trajectory_planner/remove_object',
+                                                  ObjectName,
+                                                  self.handle_remove_object)
+
+        self.refresh_model_list_server = rospy.Service('model_manager/refresh_model_list',
+                                                       Empty,
+                                                       self.refresh_model_list)
+
+        self.reload_model_list_server = rospy.Service('model_manager/reload_model_list',
+                                                      Empty,
+                                                      self.reload_model_list)
 
     def handle_add_box(self, req):
         box_dimensions = (req.sizeX, req.sizeY, req.sizeZ);
@@ -46,7 +59,7 @@ class WorldManager:
         Adds a mesh, but makes sure that the mesh is scaled to meters if given a mesh that 
         is in millimeters. 
         """
-        if(os.path.isfile(req.filename)):
+        if os.path.isfile(req.filename):
             self.scene.add_mesh_autoscaled(req.name, req.pose, req.filename)
         else:
             rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(req.name, req.filename))
@@ -103,7 +116,7 @@ class WorldManager:
         for model in self.model_manager.model_list:
             object_name = model.model_name.strip('/')
             filename = file_name_dict[object_name]
-            if(os.path.isfile(filename)):
+            if os.path.isfile(filename):
                 stampedModelPose = geometry_msgs.msg.PoseStamped()
                 stampedModelPose.header.frame_id = "/world"  #"/camera_link" #self.robot.get_planning_frame()
 

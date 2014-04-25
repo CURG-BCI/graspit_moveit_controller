@@ -1,11 +1,7 @@
-__author__ = 'jweisz'
 
 import tf_conversions.posemath as pm
 import numpy as np
 
-import rospy
-
-import graspit_msgs.msg
 import moveit_msgs.msg
 import geometry_msgs.msg
 import trajectory_msgs.msg
@@ -170,7 +166,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string end_effector
     #
-    pickup_goal.end_effector = planning_group.get_end_effector_link()
+    pickup_goal.end_effector = "BarrettHandEE" #planning_group.get_end_effector_link()
 
     # # a list of possible grasps to be used. At least one grasp must be filled in
     #
@@ -217,7 +213,6 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string planner_id
     #
-    pickup_goal.planner_id = ""
 
     # # an optional list of obstacles that we have semantic information about
     # # and that can be touched/pushed/moved in the course of grasping;
