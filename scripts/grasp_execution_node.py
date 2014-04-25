@@ -15,7 +15,7 @@ import moveit_commander
 
 import graspit_msgs.msg
 from grasp_execution_helpers import barrett_manager
-from common_helpers import convert_graspit_msg
+from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 
 
 class GraspExecutor():
@@ -29,89 +29,41 @@ class GraspExecutor():
     @member target_object_name - the current grasp target
     """
 
-    def __init__(self, init_planner = True, moveGroupName='StaubliArm', grasp_tran_frame_name = 'wam/bhand/approach_tran'):
-        self.grasp_listener = rospy.Subscriber("/graspit/grasps", graspit_msgs.msg.Grasp,
-                                               self.process_grasp_msg)
+    def __init__(self, init_planner=True, move_group_name='StaubliArm', grasp_tran_frame_name='wam/bhand/approach_tran'):
+
+        self.grasp_listener = rospy.Subscriber("/graspit/grasps", graspit_msgs.msg.Grasp, self.process_grasp_msg)
 
         self.graspit_status_publisher = rospy.Publisher("/graspit/status", graspit_msgs.msg.GraspStatus)
 
+        self.display_trajectory_publisher = rospy.Publisher("/move_group/display_planned_path",
+                                                            moveit_msgs.msg.DisplayTrajectory)
+
+        self.trajectory_action_client = actionlib.SimpleActionClient('follow_trajectory',
+                                                                     control_msgs.msg.FollowJointTrajectoryAction)
+
         self.last_grasp_time = 0
-        self.table_cube=[geometry_msgs.msg.Point(-0.7,0,-0.02), geometry_msgs.msg.Point(0.2,1,1)]
+        self.table_cube = [geometry_msgs.msg.Point(-0.7, 0, -0.02), geometry_msgs.msg.Point(0.2, 1, 1)]
         self.robot_running = init_planner
 
         moveit_commander.roscpp_initialize(sys.argv)
+        self.group = moveit_commander.MoveGroupCommander(move_group_name)
 
-        self.group = moveit_commander.MoveGroupCommander(moveGroupName)
+        self.grasp_reachability_analyzer = GraspReachabilityAnalyzer(self.group, grasp_tran_frame_name)
 
-        self.grasp_tran_frame_name = grasp_tran_frame_name
-
-        self.trajectory_action_client = actionlib.SimpleActionClient('follow_trajectory',
-                                                                      control_msgs.msg.FollowJointTrajectoryAction )
-        self.support_surface = ''
-        self.planning_time = 5
         self.preshape_ratio = .5
 
-
-        if bool(rospy.get_param('reload_model_rec',0)):
+        if bool(rospy.get_param('reload_model_rec', 0)):
             self.reload_model_list([])
-
-
-    def construct_pickup_goal(self, graspit_grasp_msg):
-        goal = moveit_msgs.msg.PickupGoal()
-        goal.target_name = graspit_grasp_msg.object_name
-        goal.group_name = self.group.get_name()
-        goal.end_effector = self.group.get_end_effector_link()
-        goal.allowed_planning_time = self.planning_time
-        goal.support_surface_name = self.support_surface
-        goal.planner_id = ""
-        goal.allow_gripper_support_collision = False
-        #for now, no path constraints
-        #goal.path_constraints = *path_constraints_;
-        goal.possible_grasps = [graspit_grasp_msg]
-        goal.planning_options.plan_only = True
-        goal.can_replan = False
-        goal.look_around = False
-        goal.replan_delay = 10.0
-        goal.planning_options.planning_scene_diff = True
-        goal.planning_options.robot_state.is_diff = True
-
-        return goal
-
-
-    def handle_grasp_callback(self, graspit_grasp_msg):
-
-
-        """
-
-        :type graspit_grasp_msg: graspit_msgs.msg.Grasp
-        """
-        moveit_grasp_msg = moveit_msgs.msg.Grasp(convert_graspit_msg(graspit_grasp_msg, self.self.grasp_tran_frame_name))
-        try:
-            self.pick_plan_client.wait_for_server(rospy.Duration(0))
-        except Exception as e:
-            rospy.logerr("ReachabilityChecker::handle_reachability_callback::Failed to reach pick action server with err: %s"%(e.message()))
-
-
-        pickup_goal = self.construct_pickup_goal(graspit_grasp_msg)
-        self.pick_plan_client.send_goal(pickup_goal)
-
-        success = self.pick_plan_client.wait_for_result(rospy.Duration(10.0))
-        result = []
-        if success:
-            result = self.pick_plan_client.get_result()
-            result = moveit_msgs.msg.PickupResult(result)
-            success = result.error_code.val == result.error_code.SUCCESS
-
-        return success, result
+        rospy.loginfo(self.__class__.__name__ + " is initialized")
 
     def run_trajectory(self, trajectory_msg):
         if not self.trajectory_action_client.wait_for_server(rospy.Duration(5)):
             rospy.logerr('Failed to find trajectory server')
-            return False,'Failed to find trajectory server', []
+            return False, 'Failed to find trajectory server', []
 
         trajectory_action_goal = control_msgs.msg.FollowJointTrajectoryGoal()
         trajectory_action_goal.trajectory = trajectory_msg
-        self.trajectory_action_client.send_goal()
+        self.trajectory_action_client.send_goal(trajectory_action_goal)
 
         if not self.trajectory_action_client.wait_for_result():
             rospy.logerr("Failed to execute trajectory")
@@ -122,6 +74,7 @@ class GraspExecutor():
         control_msgs.msg.FollowJointTrajectoryResult(trajectory_result)
         """:type : control_msgs.msg.FollowJointTrajectoryResult"""
         success = trajectory_result.SUCCESSFUL == trajectory_result.error_code
+        return success, None, trajectory_result
 
     def run_pickup_trajectory(self, pickup_result, pickup_phase):
         """
@@ -132,10 +85,18 @@ class GraspExecutor():
 
         robot_trajectory_msg = moveit_msgs.msg.RobotTrajectory(pickup_result.trajectory_stages[pickup_phase])
         trajectory_msg = robot_trajectory_msg.joint_trajectory
+
         success, error_msg, trajectory_result = self.run_trajectory(trajectory_msg)
         return success, error_msg, trajectory_result
 
-
+    def display_trajectory(self, trajectory_msg):
+        """
+        :type trajectory_msg: moveit_msgs.msg.trajectory_msg
+        """
+        display_msg = moveit_msgs.msg.DisplayTrajectory()
+        display_msg.trajectory = trajectory_msg
+        display_msg.model_id = self.group.get_name()
+        self.display_trajectory_publisher.publish(display_msg)
 
     def process_grasp_msg(self, grasp_msg):
         """@brief - Attempt to grasp the object and lift it
@@ -180,7 +141,6 @@ class GraspExecutor():
                 if not success:
                     grasp_status = graspit_msgs.msg.GraspStatus.ROBOTERROR
 
-                
             if success:
                 #Preshape the hand to the grasps' spread angle
 
@@ -194,7 +154,7 @@ class GraspExecutor():
 
             if success:
                 #Move to the goal location and grasp object
-                success, result = self.handle_grasp_callback(grasp_msg)
+                success, result = self.grasp_reachability_analyzer.query_moveit_for_reachability(grasp_msg)
                 if not success:
                     grasp_status_msg = "MoveIt Failed to plan pick"
 
@@ -206,7 +166,7 @@ class GraspExecutor():
             if self.robot_running:
                 #Move the hand to the pre grasp position
                 if success and self.robot_running:
-                    success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result,0)
+                    success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result, 0)
 
 
                 #Preshape the hand before approach
@@ -217,7 +177,7 @@ class GraspExecutor():
 
                 #do approach
                 if success:
-                    success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result,1)
+                    success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result, 1)
                 if success:
                     #Close the hand completely until the motors stall or they hit
                     #the final grasp DOFS
@@ -237,7 +197,7 @@ class GraspExecutor():
                     if selection == 1:
                         print 'lift up the object'
                         #Lift the object using the staubli's straight line path planner
-                        success, grasp_status_msg, trajectory_result = self.run_pickup_trajectory(2)
+                        success, grasp_status_msg, trajectory_result = self.run_pickup_trajectory(result, 2)
                         if not success:
                             grasp_status = graspit_msgs.msg.GraspStatus.UNREACHABLE
                             grasp_status_msg = "Couldn't lift object"
@@ -265,41 +225,18 @@ class GraspExecutor():
             pdb.set_trace()
 
 
-
-    def point_within_table_cube(self, test_point):
-        """
-        @brief - Test whether a point is within a cube defined by its
-        lower left and upper right corners. The corners are stored in the table_cube
-        member. 
-
-        FIXME - This implementation is likely slow and dumb, but it works for me. 
-
-        @param test_point - The point to test
-        """
-        [min_corner_point , max_corner_point ] = self.table_cube 
-        keys = ['x', 'y', 'z']
-        for k in keys:
-            t = getattr(test_point, k)
-            min_test = getattr(min_corner_point, k)
-            max_test = getattr(max_corner_point, k)
-            if t < min_test or t > max_test:
-                print 'Failed to be inside table in key %s - min - %f max - %f value %f'%(k, min_test, max_test, t)
-                return False
-        return True
-
-
-
-
 if __name__ == '__main__':
     try:        
         rospy.init_node('graspit_message_robot_server')
-        init_planner = rospy.get_param('init_planner', True)
-        print "init planner value %d \n"%(init_planner)
-        ge = GraspExecutor(init_planner = init_planner)
-        loop = rospy.Rate(10)
 
-        
+        init_planner = rospy.get_param('init_planner', False)
+        rospy.loginfo("init planner value %d \n" % init_planner)
+
+        ge = GraspExecutor(init_planner=init_planner)
+
+        loop = rospy.Rate(10)
         while not rospy.is_shutdown():
             loop.sleep()
-    except rospy.ROSInterruptException: pass
+    except rospy.ROSInterruptException:
+        pass
 

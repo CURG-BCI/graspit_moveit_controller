@@ -1,8 +1,8 @@
 
 <launch>
 
-    <node name="moveit_trajectory_planner" pkg="moveit_trajectory_planner" type="grasp_execution_node.py" />
-    <node name="reachability_checker" pkg="moveit_trajectory_planner" type="check_reachability_node.py" />
+    <node name="grasp_executer" pkg="moveit_trajectory_planner" type="grasp_execution_node.py" />
+    <node name="grasp_analyzer" pkg="moveit_trajectory_planner" type="grasp_analyzer_node.py" />
     <node name="world_manager" pkg="moveit_trajectory_planner" type="world_manager_node.py" />
 
 </launch>

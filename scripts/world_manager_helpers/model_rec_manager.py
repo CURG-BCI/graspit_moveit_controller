@@ -131,9 +131,9 @@ class ModelRecManager( object ):
         print x.get_dist()
         tf_pose = pm.toTf(pm.fromMsg(x.pose))
         x.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "/object", "/camera_rgb_optical_frame")
-        x.listener.waitForTransform("/world", "/object", rospy.Time(0),rospy.Duration(5))
+        x.listener.waitForTransform("/world", "/object", rospy.Time(0), rospy.Duration(5))
         x.point_cloud_data.header.frame_id = "/object"
-        pub = rospy.Publisher('/object_pointcloud',sensor_msgs.msg.PointCloud2)        
+        pub = rospy.Publisher('/object_pointcloud', sensor_msgs.msg.PointCloud2)
         pub.publish(x.point_cloud_data)
 
         
