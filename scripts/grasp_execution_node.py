@@ -29,7 +29,7 @@ class GraspExecutor():
     @member target_object_name - the current grasp target
     """
 
-    def __init__(self, init_planner=True, move_group_name='StaubliArm', grasp_tran_frame_name='wam/bhand/approach_tran'):
+    def __init__(self, init_planner=True, move_group_name='StaubliArm', grasp_tran_frame_name='approach_tran'):
 
         self.grasp_listener = rospy.Subscriber("/graspit/grasps", graspit_msgs.msg.Grasp, self.process_grasp_msg)
 

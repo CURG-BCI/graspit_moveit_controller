@@ -74,7 +74,6 @@ class WorldManager:
     #new stuff - from GraspExecutor()
     def refresh_model_list(self, empty_msg):                
         self.model_manager.refresh()
-        self.model_manager()
 
         #self.remove_object_publisher.publish('ALL') #commented lines for graspit
         #self.publish_table_models()
@@ -85,7 +84,6 @@ class WorldManager:
 
     def reload_model_list(self, empty_msg):
         self.model_manager.read()
-        self.model_manager()
 
         #self.remove_object_publisher.publish('ALL') #commented lines for graspit
         #self.publish_table_models()
@@ -165,7 +163,7 @@ if __name__ == '__main__':
         rospy.init_node('world_manager_node')
 
         world_manager = WorldManager()
-        add_table(world_manager)
+        #add_table(world_manager)
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():

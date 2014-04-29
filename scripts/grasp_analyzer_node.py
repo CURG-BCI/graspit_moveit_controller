@@ -11,7 +11,7 @@ from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 
 import sys
 import moveit_commander
-
+import ipdb
 roslib.load_manifest('moveit_trajectory_planner')
 
 
@@ -20,7 +20,7 @@ class GraspAnalyzerNode(object):
     def __init__(self,
                  analyze_grasp_topic="/moveit_trajectory_planner/check_reachability",
                  demo_pose_topic="/graspit/analyze_demo_pose", move_group_name='StaubliArm',
-                 grasp_approach_tran_frame='wam/bhand/approach_tran'):
+                 grasp_approach_tran_frame='/approach_tran'):
         """
         :type analyze_grasp_topic: string
         :param analyze_grasp_topic: topic to subscribe to for analyze grasp requests
@@ -91,6 +91,7 @@ if __name__ == '__main__':
         grasp_analyzer_node = GraspAnalyzerNode()
 
         loop = rospy.Rate(10)
+        ipdb.set_trace()
         while not rospy.is_shutdown():
             loop.sleep()
     except rospy.ROSInterruptException: pass
