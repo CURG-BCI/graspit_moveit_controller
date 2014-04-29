@@ -50,7 +50,7 @@ class WorldManager:
                                                       self.reload_model_list)
 
     def handle_add_box(self, req):
-        box_dimensions = (req.sizeX, req.sizeY, req.sizeZ);
+        box_dimensions = (req.sizeX, req.sizeY, req.sizeZ)
         self.scene.add_box(req.name, req.pose, box_dimensions)
         return BoxInfoResponse()
 
@@ -70,8 +70,6 @@ class WorldManager:
         self.scene.remove_world_object(req.name)
         return ObjectNameResponse()
 
-    ###########################################################################
-    #new stuff - from GraspExecutor()
     def refresh_model_list(self, empty_msg):                
         self.model_manager.refresh()
 
@@ -163,7 +161,7 @@ if __name__ == '__main__':
         rospy.init_node('world_manager_node')
 
         world_manager = WorldManager()
-        #add_table(world_manager)
+        add_table(world_manager)
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():

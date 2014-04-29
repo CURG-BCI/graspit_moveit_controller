@@ -1,6 +1,5 @@
 
 import tf_conversions.posemath as pm
-import numpy as np
 
 import moveit_msgs.msg
 import geometry_msgs.msg
@@ -37,15 +36,21 @@ def barrett_positions_from_graspit_positions(positions):
     return joint_names, joint_positions.tolist()
 
 
+
+
 def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, graspit_grasp_msg):
     """
     :param graspit_grasp_msg: A graspit grasp message
     :type graspit_grasp_msg: graspit_msgs.msg.Grasp
-    :type move_group: moveit_commander.MoveGroupCommander
+    :type move_group_commander: moveit_commander.MoveGroupCommander
     """
 
-    listener = tf.listener.TransformListener()
-    listener.waitForTransform("approach_tran", move_group_commander.get_end_effector_link(), rospy.Time(), timeout=rospy.Duration(1.0))
+    listener = tf.TransformListener()
+    if not listener.waitForTransform("approach_tran", move_group_commander.get_end_effector_link(),
+                              rospy.Time(), timeout=rospy.Duration(1)):
+        rospy.logerr("graspit_grasp_pose_to_moveit_grasp_pose::\n " +
+                    "Failed to find transform from %s to %s"%("approach_tran", move_group_commander.get_end_effector_link()))
+
 
     at_to_ee_tran, at_to_ee_rot = listener.lookupTransform("approach_tran", move_group_commander.get_end_effector_link(),rospy.Time())
     graspit_grasp_msg_final_grasp_tran_matrix = tf_conversions.toMatrix(tf_conversions.fromMsg(graspit_grasp_msg.final_grasp_pose))
@@ -55,7 +60,22 @@ def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, graspit_grasp_
     rospy.loginfo("actual_ee_pose: " + str(actual_ee_pose))
     return actual_ee_pose
 
+def get_approach_dir_in_ee_coords(move_group_commander, approach_dir_stamped):
+    """
+    :type move_group_commander: moveit_commander.MoveGroupCommander
+    :type approach_dir_stamped: geometry_msgs.msg.Vector3Stamped
+    :rtype geometry_msgs.msg.Vector3Stamped
+    """
+    listener = tf.listener.TransformListener()
+    listener.setUsingDedicatedThread(True)
+    if not listener.waitForTransform(approach_dir_stamped.header.frame_id, move_group_commander.get_end_effector_link(),
+                              rospy.Time(), timeout=rospy.Duration(2)):
+        rospy.logerr("Failed to find transform from %s to %s"%(approach_dir_stamped.header.frame_id, move_group_commander.get_end_effector_link()))
 
+    listener.lookupTransform(approach_dir_stamped.header.frame_id, move_group_commander.get_end_effector_link(),rospy.Time())
+    approach_dir_transformed = listener.transformVector3(move_group_commander.get_end_effector_link(),
+                                                                    approach_dir_stamped)
+    return approach_dir_transformed
 
 
 
@@ -88,7 +108,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     # trajectory_msgs/JointTrajectory pre_grasp_posture
     #
     pre_grasp_goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    spread_pregrasp_dof = (0, 0, 0, graspit_grasp_msg.pre_grasp_dof[3])
+    spread_pregrasp_dof = (graspit_grasp_msg.pre_grasp_dof[0], 0, 0, 0)
     pre_grasp_joint_names, pre_grasp_goal_point.positions = barrett_positions_from_graspit_positions(spread_pregrasp_dof)
     moveit_grasp.pre_grasp_posture.points.append(pre_grasp_goal_point)
     moveit_grasp.pre_grasp_posture.joint_names = pre_grasp_joint_names
@@ -125,8 +145,10 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     #
     # GripperTranslation pre_grasp_approach
     #
-    moveit_grasp.pre_grasp_approach.direction.vector = geometry_msgs.msg.Vector3(0, 0, -1)
-    moveit_grasp.pre_grasp_approach.direction.header.frame_id = grasp_tran_frame_name
+    approach_dir = geometry_msgs.msg.Vector3Stamped()
+    approach_dir.vector = geometry_msgs.msg.Vector3(0,0,1)
+    approach_dir.header.frame_id = grasp_tran_frame_name
+    moveit_grasp.pre_grasp_approach.direction = get_approach_dir_in_ee_coords(move_group_commander, approach_dir)
     # #Convert the grasp message to a transform
     grasp_tran = pm.toMatrix(pm.fromMsg(graspit_grasp_msg.final_grasp_pose))
 
@@ -136,7 +158,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
 
     pregrasp_dist = np.linalg.norm(pregrasp_tran[0:3, 3] - grasp_tran[0:3, 3])
     moveit_grasp.pre_grasp_approach.desired_distance = pregrasp_dist
-    moveit_grasp.pre_grasp_approach.min_distance = 0 #pregrasp_dist
+    moveit_grasp.pre_grasp_approach.min_distance = 0#pregrasp_dist
 
     # # The retreat direction to take after a grasp has been completed (object is attached)
     #
@@ -207,7 +229,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string support_surface_name
     #
-    pickup_goal.support_surface_name = "my_support_surface"
+    pickup_goal.support_surface_name = "table"
 
     # # whether collisions between the gripper and the support surface should be acceptable
     # # during move from pre-grasp to grasp and during lift. Collisions when moving to the

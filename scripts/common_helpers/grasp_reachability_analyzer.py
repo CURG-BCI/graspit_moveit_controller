@@ -62,6 +62,9 @@ class GraspReachabilityAnalyzer():
 
         rospy.loginfo("success of pick_plan_client:" + str(success))
 
+        #if success:
+        #    ipdb.set_trace()
+
         return success, result
 
     def pose_reachability_checker(self, palm_pose, object_name):
