@@ -195,6 +195,9 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
 
 
 def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
+    """
+    :type planning_group: moveit_commander.MoveGroupCommander
+    """
 
     pickup_goal = moveit_msgs.msg.PickupGoal()
 
