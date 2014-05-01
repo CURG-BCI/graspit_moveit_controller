@@ -29,7 +29,7 @@ class GraspExecutor():
     @member target_object_name - the current grasp target
     """
 
-    def __init__(self, init_planner=True, move_group_name='StaubliArm', grasp_tran_frame_name='approach_tran'):
+    def __init__(self, use_real_hw=True, move_group_name='StaubliArm', grasp_tran_frame_name='approach_tran'):
 
         self.grasp_listener = rospy.Subscriber("/graspit/grasps", graspit_msgs.msg.Grasp, self.process_grasp_msg)
 
@@ -43,7 +43,7 @@ class GraspExecutor():
 
         self.last_grasp_time = 0
         self.table_cube = [geometry_msgs.msg.Point(-0.7, 0, -0.02), geometry_msgs.msg.Point(0.2, 1, 1)]
-        self.robot_running = init_planner
+        self.robot_running = use_real_hw
 
         moveit_commander.roscpp_initialize(sys.argv)
         self.group = moveit_commander.MoveGroupCommander(move_group_name)
@@ -229,10 +229,11 @@ if __name__ == '__main__':
     try:        
         rospy.init_node('graspit_message_robot_server')
 
-        init_planner = rospy.get_param('init_planner', False)
-        rospy.loginfo("init planner value %d \n" % init_planner)
+        use_real_hw = rospy.get_param('use_real_hw', False)
+        print use_real_hw
+        rospy.loginfo("use_real_hw value %d \n" % use_real_hw)
 
-        ge = GraspExecutor(init_planner=init_planner)
+        ge = GraspExecutor(use_real_hw=use_real_hw)
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():
