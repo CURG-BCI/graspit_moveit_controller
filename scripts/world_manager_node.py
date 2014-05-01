@@ -137,10 +137,10 @@ def add_table(world_manager):
     rospy.loginfo("adding table in planning frame: " + str(frame_id))
     box_pose = geometry_msgs.msg.PoseStamped()
     box_pose.header.frame_id = frame_id
-    table_x = -.92
+    table_x = .92
     table_y = 1.22
     table_z = .05
-    table_world_x_offset = .24
+    table_world_x_offset = -.68
     table_world_y_offset = -.19
     table_world_z_offset = 0
     box_pose.pose.position.x = table_x/2.0 + table_world_x_offset
