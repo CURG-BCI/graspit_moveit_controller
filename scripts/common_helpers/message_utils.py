@@ -100,7 +100,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     # # A name for this grasp
     # string id
     #
-    moveit_grasp.id = 'graspit_' + str(graspit_grasp_msg.grasp_source)
+    moveit_grasp.id = 'graspit_' + str(graspit_grasp_msg.grasp_id)
 
     # # The internal posture of the hand for the pre-grasp
     # # only positions are used
