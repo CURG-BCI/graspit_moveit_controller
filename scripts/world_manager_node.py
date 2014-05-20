@@ -61,6 +61,7 @@ class WorldManager:
         """
         if os.path.isfile(req.filename):
             self.scene.add_mesh_autoscaled(req.name, req.pose, req.filename)
+            rospy.loginfo(self.__class__.__name__ + '::handle_add_autoscaled_mesh::name -- %s filename -- %s'%(req.name, req.filename) )
         else:
             rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(req.name, req.filename))
 
@@ -115,14 +116,12 @@ class WorldManager:
             if os.path.isfile(filename):
                 stampedModelPose = geometry_msgs.msg.PoseStamped()
                 stampedModelPose.header.frame_id = "/world"  #"/camera_link" #self.robot.get_planning_frame()
+                rospy.loginfo(self.__class__.__name__ +
+                              ':: Adding model %s -- frame_id %s -- '%(model_name, stampedModelPose.header.frame_id) +
+                              ' filename %s '%(filename))
 
-                print "============================="
-                print "adding:"
-                print object_name
-                print stampedModelPose.header.frame_id
+
                 stampedModelPose.pose = model.get_world_pose()
-                self.scene.add_mesh_autoscaled(object_name, stampedModelPose, filename)
-                print "============================="
                 self.scene.add_mesh_autoscaled(model.object_name, stampedModelPose, filename)
             else:
                 rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(model.object_name, filename))
