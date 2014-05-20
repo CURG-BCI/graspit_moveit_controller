@@ -104,7 +104,6 @@ def GetHandPose( whichmanip ):
 
 import time
 from numpy import floor
-from pr_msgs.srv import MoveHand, RelaxHand
 
 def WaitForHand( whichmanip, timeout=5.0 ):
     '''
@@ -127,7 +126,7 @@ def WaitForHand( whichmanip, timeout=5.0 ):
 
 def MoveHandSrv(movetype, movevalues):
     try:
-        owd_movehand = rospy.ServiceProxy('/bhd/MoveHand', MoveHand)
+        owd_movehand = rospy.ServiceProxy('/bhd/MoveHand', pr_msgs.srv.MoveHand)
         res = owd_movehand(movetype, movevalues)
         #print res
         return 1
@@ -138,7 +137,7 @@ def MoveHandSrv(movetype, movevalues):
 
 def RelaxHandSrv():
     try:
-        owd_relaxhand = rospy.ServiceProxy('/bhd/RelaxHand', RelaxHand)
+        owd_relaxhand = rospy.ServiceProxy('/bhd/RelaxHand', pr_msgs.srv.RelaxHand)
         res = owd_relaxhand()
         return 1
     except rospy.ServiceException as e:
