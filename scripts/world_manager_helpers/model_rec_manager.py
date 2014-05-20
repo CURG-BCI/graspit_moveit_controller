@@ -90,6 +90,8 @@ class ModelRecManager(object):
         resp = find_objects_srv()
         self.model_list = list()
         for i in range(len(resp.object_name)):
+            rospy.logerr(self.__class__.__name__ + '::refresh:: added object - ' + resp.object_name[i] + 'pose :'
+                         + str(resp.object_pose[i]))
             self.model_list.append(ModelManager(resp.object_name[i],
                                                 resp.pointcloud[i],
                                                 resp.object_pose[i]))
