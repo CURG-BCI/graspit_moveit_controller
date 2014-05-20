@@ -38,7 +38,7 @@ class GraspExecutor():
         self.display_trajectory_publisher = rospy.Publisher("/move_group/display_planned_path",
                                                             moveit_msgs.msg.DisplayTrajectory)
 
-        self.trajectory_action_client = actionlib.SimpleActionClient('follow_trajectory',
+        self.trajectory_action_client = actionlib.SimpleActionClient('setFollowTrajectory',
                                                                      control_msgs.msg.FollowJointTrajectoryAction)
 
         self.last_grasp_time = 0
