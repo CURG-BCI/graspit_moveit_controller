@@ -145,7 +145,7 @@ class GraspExecutor():
                 #Preshape the hand to the grasps' spread angle
 
                 if self.robot_running:
-                    success = barrett_manager.move_hand(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
+                    success = barrett_manager.move_hand([0,0,0, grasp_msg.pre_grasp_dof[0]])
 
                     rospy.logerr('GraspExecutor::process_grasp_msg::pre-grasp')
                     #Pregrasp the object
