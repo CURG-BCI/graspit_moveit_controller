@@ -110,8 +110,8 @@ class WorldManager:
         @brief - Adds all of the models in the model_rec_manager to moveit enviornment and adds names to cache
         """
         for model in self.model_manager.model_list:
-            object_name = model.model_name.strip('/')
-            filename = file_name_dict[object_name]
+            model_name = model.model_name.strip('/')
+            filename = file_name_dict[model_name]
             if os.path.isfile(filename):
                 stampedModelPose = geometry_msgs.msg.PoseStamped()
                 stampedModelPose.header.frame_id = "/world"  #"/camera_link" #self.robot.get_planning_frame()
@@ -123,10 +123,11 @@ class WorldManager:
                 stampedModelPose.pose = model.get_world_pose()
                 self.scene.add_mesh_autoscaled(object_name, stampedModelPose, filename)
                 print "============================="
+                self.scene.add_mesh_autoscaled(model.object_name, stampedModelPose, filename)
             else:
-                rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
+                rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(model.object_name, filename))
 
-            self.body_name_cache.append(object_name)
+            self.body_name_cache.append(model.model_name)
 
 
 def add_table(world_manager):
