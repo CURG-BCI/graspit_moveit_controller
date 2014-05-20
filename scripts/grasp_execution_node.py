@@ -112,7 +112,7 @@ class GraspExecutor():
                 return [], []
             self.last_grasp_time = time()
             
-            print grasp_msg
+            rospy.loginfo("GraspExecutor::process_grasp_msg::" + str(grasp_msg))
             grasp_status = graspit_msgs.msg.GraspStatus.SUCCESS
             grasp_status_msg = "grasp_succeeded"
             success = 1
@@ -121,12 +121,12 @@ class GraspExecutor():
             #and not currently there
 
             if self.robot_running:
-                print 'go home'
+                rospy.loginfo('GraspExecutor::process_grasp_msg::go home')
                 self.group.set_named_target("home")
                 plan = self.group.plan()
                 success = self.group.execute(plan)
                 if not success:
-                    print "Couldn't move arm home"
+                    rospy.logerr("GraspExecutor::process_grasp_msg::Couldn't move arm home")
 
                 #This sometimes fails near the end of the trajectory because the last few
                 #steps of the trajectory are slow because our blending parameters
@@ -147,7 +147,7 @@ class GraspExecutor():
                 if self.robot_running:
                     success = barrett_manager.move_hand(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
 
-                    print 'pre-grasp'
+                    rospy.logerr('GraspExecutor::process_grasp_msg::pre-grasp')
                     #Pregrasp the object
                     if not success:
                         grasp_status_msg = "Failed to preshape hand"
@@ -195,16 +195,14 @@ class GraspExecutor():
                 if success:
                     selection = int(raw_input('Lift up (1) or not (0): '))
                     if selection == 1:
-                        print 'lift up the object'
+                        rospy.loginfo('GraspExecutor::process_grasp_msg::lift up the object')
                         #Lift the object using the staubli's straight line path planner
                         success, grasp_status_msg, trajectory_result = self.run_pickup_trajectory(result, 2)
                         if not success:
                             grasp_status = graspit_msgs.msg.GraspStatus.UNREACHABLE
                             grasp_status_msg = "Couldn't lift object"
                         else:
-                            print 'not lift up the object'
-
-
+                            rospy.logerr('GraspExecutor::process_grasp_msg::not lift up the object')
 
             #Maybe decide if it has been successfully lifted here...
             if success:
@@ -214,7 +212,7 @@ class GraspExecutor():
             #Tell graspit whether the grasp succeeded
             self.graspit_status_publisher.publish(grasp_status, grasp_status_msg, -1)
             
-            print grasp_status_msg
+            rospy.loginfo('GraspExecutor::process_grasp_msg::' + str(grasp_status_msg))
 
             return grasp_status, grasp_status_msg
 
