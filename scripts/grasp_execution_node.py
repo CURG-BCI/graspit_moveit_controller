@@ -83,7 +83,7 @@ class GraspExecutor():
         :type pickup_result: moveit_msgs.msg.PickupResult
         """
 
-        robot_trajectory_msg = moveit_msgs.msg.RobotTrajectory(pickup_result.trajectory_stages[pickup_phase])
+        robot_trajectory_msg = pickup_result.trajectory_stages[pickup_phase]
         trajectory_msg = robot_trajectory_msg.joint_trajectory
 
         success, error_msg, trajectory_result = self.run_trajectory(trajectory_msg)
