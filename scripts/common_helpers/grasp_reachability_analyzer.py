@@ -16,6 +16,8 @@ class GraspReachabilityAnalyzer():
         """
         self.pick_plan_client = actionlib.SimpleActionClient('/pickup', moveit_msgs.msg.PickupAction)
         self.move_group = move_group
+        self.move_group.set_workspace([-1.25, -.5, -.4, .25, .5, 1.6])
+
         self.grasp_approach_tran_frame = grasp_approach_tran_frame
         self.grasp_dict = {}
 
@@ -29,7 +31,6 @@ class GraspReachabilityAnalyzer():
                                                                        self.grasp_approach_tran_frame)
         self.grasp_dict[moveit_grasp_msg.id] = moveit_grasp_msg
         rospy.loginfo("moveit_grasp_msg: " + str(moveit_grasp_msg))
-
         pickup_goal = message_utils.build_pickup_goal(moveit_grasp_msg=moveit_grasp_msg,
                                                       object_name=graspit_grasp_msg.object_name,
                                                       planning_group=self.move_group)
@@ -43,6 +44,7 @@ class GraspReachabilityAnalyzer():
         #rospy.loginfo("pickup attempt result: %s"%(str(pick_attempt_succeeded)))
 
         #rospy.loginfo("pickup_goal: " + str(pickup_goal))
+
 
         received_result = False
         try:
@@ -78,3 +80,4 @@ class GraspReachabilityAnalyzer():
             return False, plan #this means the list is empty and therefore there is no path
         else:
             return True, plan
+

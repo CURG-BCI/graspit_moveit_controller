@@ -131,7 +131,7 @@ def MoveHandSrv(movetype, movevalues):
         #print res
         return 1
     except rospy.ServiceException as e:
-        rospy.logerror("Service call to MoveHand failed: %s"%e.message)
+        rospy.logerr("Service call to MoveHand failed: %s"%e.message)
         return 0
 
 

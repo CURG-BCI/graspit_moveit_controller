@@ -13,9 +13,10 @@ from std_srvs.srv import Empty
 from world_manager_helpers.extended_planning_scene_interface import ExtendedPlanningSceneInterface
 from world_manager_helpers.model_rec_manager import ModelManager, ModelRecManager
 from world_manager_helpers.object_filename_dict import file_name_dict
-
+import tf
+import tf.transformations
 roslib.load_manifest('moveit_trajectory_planner')
-
+import ipdb
 
 class WorldManager:
 
@@ -155,6 +156,44 @@ def add_table(world_manager):
     world_manager.scene.add_box("table", box_pose, box_dimensions)
     rospy.loginfo("table added")
 
+def add_walls(world_manager):
+
+    back_wall_pose = geometry_msgs.msg.PoseStamped()
+    back_wall_pose.header.frame_id = '/staubli_rx60l_link1'
+    wall_dimensions =  [0.92, 1.22, 0.05]
+    back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': 0.35, 'y': -0.09, 'z': -0.22})
+    back_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.7128395185,
+                                                                      'y': 0.0414512120285,
+                                                                      'z': 0.699774446448,
+                                                                      'w': 0.0213855555098})
+    left_wall_pose = geometry_msgs.msg.PoseStamped()
+    left_wall_pose.header.frame_id = '/staubli_rx60l_link1'
+    left_wall_dimensions =  [0.92, 1.22, 0.05]
+    left_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': -0.56,
+                                                              'y': -0.91,
+                                                              'z': -0.09})
+
+    left_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.482199130451,
+                                                                      'y': 0.516804171535,
+                                                                      'z': 0.487346836672,
+                                                                      'w': 0.512728493124})
+    
+    right_wall_pose = geometry_msgs.msg.PoseStamped()
+    right_wall_pose.header.frame_id = '/staubli_rx60l_link1'
+    right_wall_dimensions =  [0.92, 1.22, 0.05]
+    right_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': -0.6,
+                                                              'y': 0.68,
+                                                               'z': -0.31})
+
+    right_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.50728105048,
+                                                                       'y': 0.487102614313,
+                                                                       'z': 0.482034934632,
+                                                                       'w': 0.522531626553})
+    world_manager.scene.add_box("left_wall", left_wall_pose, wall_dimensions)
+    world_manager.scene.add_box("right_wall", right_wall_pose, wall_dimensions)
+    world_manager.scene.add_box("back_wall", back_wall_pose, wall_dimensions)
+
+
 if __name__ == '__main__':
 
     try:
@@ -162,6 +201,7 @@ if __name__ == '__main__':
 
         world_manager = WorldManager()
         add_table(world_manager)
+        add_walls(world_manager)
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():

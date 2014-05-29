@@ -16,7 +16,7 @@ import moveit_commander
 import graspit_msgs.msg
 from grasp_execution_helpers import barrett_manager
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
-
+import ipdb
 
 class GraspExecutor():
     """@brief - Generates a persistent converter between grasps published by a graspit commander and
@@ -73,7 +73,7 @@ class GraspExecutor():
         trajectory_result = control_msgs.msg.FollowJointTrajectoryResult(trajectory_result)
         control_msgs.msg.FollowJointTrajectoryResult(trajectory_result)
         """:type : control_msgs.msg.FollowJointTrajectoryResult"""
-        success = trajectory_result.SUCCESSFUL == trajectory_result.error_code
+        success = (trajectory_result.SUCCESSFUL == trajectory_result.error_code.error_code)
         return success, None, trajectory_result
 
     def run_pickup_trajectory(self, pickup_result, pickup_phase):
@@ -164,6 +164,7 @@ class GraspExecutor():
 
             #Now run stuff on the robot
             if self.robot_running:
+                rospy.loginfo("GraspExecutor::process_grasp_msg::Running grasp")
                 #Move the hand to the pre grasp position
                 if success and self.robot_running:
                     success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result, 0)
@@ -177,7 +178,7 @@ class GraspExecutor():
 
                 #do approach
                 if success:
-                    success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result, 1)
+                    success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result,2)
                 if success:
                     #Close the hand completely until the motors stall or they hit
                     #the final grasp DOFS
@@ -197,7 +198,7 @@ class GraspExecutor():
                     if selection == 1:
                         rospy.loginfo('GraspExecutor::process_grasp_msg::lift up the object')
                         #Lift the object using the staubli's straight line path planner
-                        success, grasp_status_msg, trajectory_result = self.run_pickup_trajectory(result, 2)
+                        success, grasp_status_msg, trajectory_result = self.run_pickup_trajectory(result, 4)
                         if not success:
                             grasp_status = graspit_msgs.msg.GraspStatus.UNREACHABLE
                             grasp_status_msg = "Couldn't lift object"
@@ -213,7 +214,7 @@ class GraspExecutor():
             self.graspit_status_publisher.publish(grasp_status, grasp_status_msg, -1)
             
             rospy.loginfo('GraspExecutor::process_grasp_msg::' + str(grasp_status_msg))
-
+            ipdb.set_trace()
             return grasp_status, grasp_status_msg
 
         except Exception as e:
