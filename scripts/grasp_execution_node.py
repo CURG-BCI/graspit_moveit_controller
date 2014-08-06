@@ -14,7 +14,7 @@ import actionlib
 import moveit_commander
 
 import graspit_msgs.msg
-from grasp_execution_helpers import barrett_manager
+from grasp_execution_helpers import (barrett_manager, jaco_manager)
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 
 
@@ -40,6 +40,13 @@ class GraspExecutor():
 
         self.trajectory_action_client = actionlib.SimpleActionClient('follow_trajectory',
                                                                      control_msgs.msg.FollowJointTrajectoryAction)
+        self.barrett_fcns = {'open': barrett_manager.open_barrett, 'close': barrett_manager.close_barrett,
+                             'move': barrett_manager.move_hand}
+        self.jaco_fcns = {'open': jaco_manager.open_hand, 'close': jaco_manager.close_hand,
+                          'move': jaco_manager.move_hand}
+        self.hand_manager = self.barrett_fcns
+        if move_group_name != 'StaubliArm':
+            self.hand_manager = self.jaco_fcns
 
         self.last_grasp_time = 0
         self.table_cube = [geometry_msgs.msg.Point(-0.7, 0, -0.02), geometry_msgs.msg.Point(0.2, 1, 1)]
@@ -111,12 +118,12 @@ class GraspExecutor():
             if (time() - self.last_grasp_time) < 30:
                 return [], []
             self.last_grasp_time = time()
-            
+
             print grasp_msg
             grasp_status = graspit_msgs.msg.GraspStatus.SUCCESS
             grasp_status_msg = "grasp_succeeded"
             success = 1
-            
+
             # Send the robot to its home position if it is actually running
             #and not currently there
 
@@ -137,7 +144,7 @@ class GraspExecutor():
 
             #Open the hand - Leaves spread angle unchanged
             if success and self.robot_running:
-                success, grasp_status_msg, positions = barrett_manager.open_barrett()
+                success, grasp_status_msg, positions = self.hand_manager['open']()
                 if not success:
                     grasp_status = graspit_msgs.msg.GraspStatus.ROBOTERROR
 
@@ -145,7 +152,7 @@ class GraspExecutor():
                 #Preshape the hand to the grasps' spread angle
 
                 if self.robot_running:
-                    success = barrett_manager.move_hand(1, [0,0,0, grasp_msg.pre_grasp_dof[0]])
+                    success = self.hand_manager['move']([0,0,0, grasp_msg.pre_grasp_dof[0]])
 
                     print 'pre-grasp'
                     #Pregrasp the object
@@ -173,7 +180,7 @@ class GraspExecutor():
                 if success:
                     preapproach_shape = self.preshape_ratio *array(grasp_msg.final_grasp_dof)
                     preapproach_shape[0] = grasp_msg.final_grasp_dof[0]
-                    success, grasp_status_msg, joint_angles = barrett_manager.move_hand(preapproach_shape)
+                    success, grasp_status_msg, joint_angles = self.hand_manager['move'](preapproach_shape)
 
                 #do approach
                 if success:
@@ -181,12 +188,12 @@ class GraspExecutor():
                 if success:
                     #Close the hand completely until the motors stall or they hit
                     #the final grasp DOFS
-                    success, grasp_status_msg, joint_angles = barrett_manager.move_hand([grasp_msg.final_grasp_dof[1],grasp_msg.final_grasp_dof[2], grasp_msg.final_grasp_dof[3], grasp_msg.final_grasp_dof[0]])
+                    success, grasp_status_msg, joint_angles = self.hand_manager['move']([grasp_msg.final_grasp_dof[1],grasp_msg.final_grasp_dof[2], grasp_msg.final_grasp_dof[3], grasp_msg.final_grasp_dof[0]])
 
                 #close fingers
                 if success:
                     #Now close the hand completely until the motors stall.
-                    success, grasp_status_msg, joint_angles = barrett_manager.close_barrett()
+                    success, grasp_status_msg, joint_angles = self.hand_manager['close']()
 
                 if not success:
                     grasp_status = graspit_msgs.msg.GraspStatus.ROBOTERROR
@@ -230,10 +237,11 @@ if __name__ == '__main__':
         rospy.init_node('graspit_message_robot_server')
 
         use_robot_hw = rospy.get_param('use_robot_hw', False)
+        move_group_name = rospy.get_param('/move_group_name', 'StaubliArm')
         print use_robot_hw
         rospy.loginfo("use_robot_hw value %d \n" % use_robot_hw)
 
-        ge = GraspExecutor(use_robot_hw=use_robot_hw)
+        ge = GraspExecutor(use_robot_hw=use_robot_hw, move_group_name=move_group_name)
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():

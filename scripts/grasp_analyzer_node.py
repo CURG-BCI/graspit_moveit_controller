@@ -87,9 +87,9 @@ if __name__ == '__main__':
 
     try:
         rospy.init_node('grasp_analyzer_node')
+        move_group_name = rospy.get_param('/move_group_name', 'StaubliArm')
 
-        grasp_analyzer_node = GraspAnalyzerNode()
-
+        grasp_analyzer_node = GraspAnalyzerNode(move_group_name=move_group_name)
         loop = rospy.Rate(10)
         ipdb.set_trace()
         while not rospy.is_shutdown():

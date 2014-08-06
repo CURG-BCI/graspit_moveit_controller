@@ -36,6 +36,16 @@ def barrett_positions_from_graspit_positions(positions):
     return joint_names, joint_positions.tolist()
 
 
+def mico_positions_from_graspit_positions(positions):
+    """
+    :param positions: Positions of the mico arm in graspit's conventions
+    :type positions: numpy.array
+    :returns a pair containing the joint names array & the joint positions
+    :rtype (list[string],list[float])
+    """
+    joint_positions = [positions[0], positions[1]]
+    joint_names = ['finger_1', 'finger_2']
+    return joint_names, joint_positions
 
 
 def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, graspit_grasp_msg):
@@ -44,6 +54,7 @@ def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, graspit_grasp_
     :type graspit_grasp_msg: graspit_msgs.msg.Grasp
     :type move_group_commander: moveit_commander.MoveGroupCommander
     """
+
 
     listener = tf.TransformListener()
     if not listener.waitForTransform("approach_tran", move_group_commander.get_end_effector_link(),
@@ -59,6 +70,7 @@ def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, graspit_grasp_
     actual_ee_pose = tf_conversions.toMsg(tf_conversions.fromMatrix(actual_ee_pose_matrix))
     rospy.loginfo("actual_ee_pose: " + str(actual_ee_pose))
     return actual_ee_pose
+
 
 def get_approach_dir_in_ee_coords(move_group_commander, approach_dir_stamped):
     """
@@ -78,7 +90,6 @@ def get_approach_dir_in_ee_coords(move_group_commander, approach_dir_stamped):
     return approach_dir_transformed
 
 
-
 def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  grasp_tran_frame_name='approach_tran'):
     """
     :param graspit_grasp_msg: A graspit grasp message
@@ -86,6 +97,11 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     :returns a moveit message built from the graspit grasp
     :rtype: moveit_msgs.msg.Grasp
     """
+    # 'manipulator' is the name for the root move group in the mico arm
+    moveit_positions_from_graspit_positions = {'StaubliArm': barrett_positions_from_graspit_positions,
+                                               'manipulator': mico_positions_from_graspit_positions}
+    move_group_name = rospy.get_param('/move_group_name','StaubliArm')
+    moveit_positions_from_graspit_positions_fcn = moveit_positions_from_graspit_positions[move_group_name]
 
     moveit_grasp = moveit_msgs.msg.Grasp()
 
@@ -109,7 +125,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     #
     pre_grasp_goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
     spread_pregrasp_dof = (graspit_grasp_msg.pre_grasp_dof[0], 0, 0, 0)
-    pre_grasp_joint_names, pre_grasp_goal_point.positions = barrett_positions_from_graspit_positions(spread_pregrasp_dof)
+    pre_grasp_joint_names, pre_grasp_goal_point.positions = moveit_positions_from_graspit_positions(spread_pregrasp_dof)
     moveit_grasp.pre_grasp_posture.points.append(pre_grasp_goal_point)
     moveit_grasp.pre_grasp_posture.joint_names = pre_grasp_joint_names
 
@@ -119,7 +135,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     # trajectory_msgs/JointTrajectory grasp_posture
     #
     goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    joint_names, goal_point.positions = barrett_positions_from_graspit_positions(graspit_grasp_msg.pre_grasp_dof)
+    joint_names, goal_point.positions = moveit_positions_from_graspit_positions(graspit_grasp_msg.pre_grasp_dof)
     moveit_grasp.grasp_posture.joint_names = joint_names
     moveit_grasp.grasp_posture.points.append(goal_point)
 
@@ -146,7 +162,11 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     # GripperTranslation pre_grasp_approach
     #
     approach_dir = geometry_msgs.msg.Vector3Stamped()
-    approach_dir.vector = geometry_msgs.msg.Vector3(0,0,1)
+    # Set default approach dir to the jaco approach dir.
+    x = rospy.get_param('/approach_dir_x', 0)
+    y = rospy.get_param('/approach_dir_y', 0)
+    z = rospy.get_param('/approach_dir_z', -1)
+    approach_dir.vector = geometry_msgs.msg.Vector3(x,y,z)
     approach_dir.header.frame_id = grasp_tran_frame_name
     moveit_grasp.pre_grasp_approach.direction = get_approach_dir_in_ee_coords(move_group_commander, approach_dir)
     # #Convert the grasp message to a transform
@@ -291,4 +311,3 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     pickup_goal.planning_options.replan_delay = 10.0
 
     return pickup_goal
-
