@@ -1,4 +1,5 @@
 import moveit_commander
+import rospy
 
 
 class ExtendedPlanningSceneInterface(moveit_commander.PlanningSceneInterface):
@@ -9,6 +10,8 @@ class ExtendedPlanningSceneInterface(moveit_commander.PlanningSceneInterface):
         collision_object = self._PlanningSceneInterface__make_mesh(name, pose, filename)
         self.__scale_mesh(collision_object, scale)
         self._pub_co.publish(collision_object)
+        rospy.logerr(self.__class__.__name__ + '::add_scaled_mesh::' +
+                     'Sent mesh name: %s filename $s'%(name, filename))
 
     def __scale_mesh(self, collision_object, scale):
         for point in collision_object.meshes[0].vertices:
@@ -27,7 +30,9 @@ class ExtendedPlanningSceneInterface(moveit_commander.PlanningSceneInterface):
             if (abs(point.x) > 5 or abs(point.y) > 5 or abs(point.z) > 5):
                 scale = [.001, .001, .001]
                 break
-
+        rospy.logerr(self.__class__.__name__ + '::add_mesh_autoscaled::' +
+                     'Sent mesh name: %s filename %s'%(name, filename))
         self.__scale_mesh(collision_object, scale)
-        self._pub_co.publish(collision_object)        
+        self._pub_co.publish(collision_object)
+
 

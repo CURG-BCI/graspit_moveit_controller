@@ -50,6 +50,9 @@ class GraspAnalyzerNode(object):
 
         self.grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, grasp_approach_tran_frame)
 
+
+
+
         rospy.loginfo(self.__class__.__name__ + " is inited")
 
     def analyze_demonstration_pose(self, demo_pose):
@@ -83,14 +86,28 @@ class GraspAnalyzerNode(object):
         return response
 
 
-if __name__ == '__main__':
 
+
+def main():
     try:
         rospy.init_node('grasp_analyzer_node')
         move_group_name = rospy.get_param('/arm_name', 'StaubliArm')
         approach_frame = rospy.get_param('approach_tran_frame', '/approach_tran_frame')
         grasp_analyzer_node = GraspAnalyzerNode(move_group_name=move_group_name, grasp_approach_tran_frame=approach_frame)
         loop = rospy.Rate(10)
+
         while not rospy.is_shutdown():
             loop.sleep()
     except rospy.ROSInterruptException: pass
+
+
+if __name__ == '__main__':
+    main()
+
+    """
+    import cProfile
+    cProfile
+    cProfile.run('main()', filename="test_profile.txt")
+    """
+
+

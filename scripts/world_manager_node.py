@@ -13,9 +13,10 @@ from std_srvs.srv import Empty
 from world_manager_helpers.extended_planning_scene_interface import ExtendedPlanningSceneInterface
 from world_manager_helpers.model_rec_manager import ModelManager, ModelRecManager
 from world_manager_helpers.object_filename_dict import file_name_dict
-
+import tf
+import tf.transformations
 roslib.load_manifest('moveit_trajectory_planner')
-
+import ipdb
 
 class WorldManager:
 
@@ -61,6 +62,7 @@ class WorldManager:
         """
         if os.path.isfile(req.filename):
             self.scene.add_mesh_autoscaled(req.name, req.pose, req.filename)
+            rospy.loginfo(self.__class__.__name__ + '::handle_add_autoscaled_mesh::name -- %s filename -- %s'%(req.name, req.filename) )
         else:
             rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(req.name, req.filename))
 
@@ -110,23 +112,22 @@ class WorldManager:
         @brief - Adds all of the models in the model_rec_manager to moveit enviornment and adds names to cache
         """
         for model in self.model_manager.model_list:
-            object_name = model.model_name.strip('/')
-            filename = file_name_dict[object_name]
+            model_name = model.model_name.strip('/')
+            filename = file_name_dict[model_name]
             if os.path.isfile(filename):
                 stampedModelPose = geometry_msgs.msg.PoseStamped()
                 stampedModelPose.header.frame_id = "/world"  #"/camera_link" #self.robot.get_planning_frame()
+                rospy.loginfo(self.__class__.__name__ +
+                              ':: Adding model %s -- frame_id %s -- '%(model_name, stampedModelPose.header.frame_id) +
+                              ' filename %s '%(filename))
 
-                print "============================="
-                print "adding:"
-                print object_name
-                print stampedModelPose.header.frame_id
+
                 stampedModelPose.pose = model.get_world_pose()
-                self.scene.add_mesh_autoscaled(object_name, stampedModelPose, filename)
-                print "============================="
+                self.scene.add_mesh_autoscaled(model.object_name, stampedModelPose, filename)
             else:
-                rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(object_name, filename))
+                rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(model.object_name, filename))
 
-            self.body_name_cache.append(object_name)
+            self.body_name_cache.append(model.model_name)
 
 
 def add_table(world_manager):
@@ -155,6 +156,44 @@ def add_table(world_manager):
     world_manager.scene.add_box("table", box_pose, box_dimensions)
     rospy.loginfo("table added")
 
+def add_walls(world_manager):
+
+    back_wall_pose = geometry_msgs.msg.PoseStamped()
+    back_wall_pose.header.frame_id = '/staubli_rx60l_link1'
+    wall_dimensions =  [0.92, 1.22, 0.05]
+    back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': 0.35, 'y': -0.09, 'z': -0.22})
+    back_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.7128395185,
+                                                                      'y': 0.0414512120285,
+                                                                      'z': 0.699774446448,
+                                                                      'w': 0.0213855555098})
+    left_wall_pose = geometry_msgs.msg.PoseStamped()
+    left_wall_pose.header.frame_id = '/staubli_rx60l_link1'
+    left_wall_dimensions =  [0.92, 1.22, 0.05]
+    left_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': -0.56,
+                                                              'y': -0.91,
+                                                              'z': -0.09})
+
+    left_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.482199130451,
+                                                                      'y': 0.516804171535,
+                                                                      'z': 0.487346836672,
+                                                                      'w': 0.512728493124})
+    
+    right_wall_pose = geometry_msgs.msg.PoseStamped()
+    right_wall_pose.header.frame_id = '/staubli_rx60l_link1'
+    right_wall_dimensions =  [0.92, 1.22, 0.05]
+    right_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': -0.6,
+                                                              'y': 0.68,
+                                                               'z': -0.31})
+
+    right_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.50728105048,
+                                                                       'y': 0.487102614313,
+                                                                       'z': 0.482034934632,
+                                                                       'w': 0.522531626553})
+    world_manager.scene.add_box("left_wall", left_wall_pose, wall_dimensions)
+    world_manager.scene.add_box("right_wall", right_wall_pose, wall_dimensions)
+    world_manager.scene.add_box("back_wall", back_wall_pose, wall_dimensions)
+
+
 if __name__ == '__main__':
 
     try:
@@ -162,6 +201,7 @@ if __name__ == '__main__':
 
         world_manager = WorldManager()
         add_table(world_manager)
+        add_walls(world_manager)
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():

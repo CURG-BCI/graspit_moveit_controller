@@ -90,14 +90,18 @@ class ModelRecManager(object):
         resp = find_objects_srv()
         self.model_list = list()
         for i in range(len(resp.object_name)):
+            rospy.logerr(self.__class__.__name__ + '::refresh:: added object - ' + resp.object_name[i] + 'pose :'
+                         + str(resp.object_pose[i]))
             self.model_list.append(ModelManager(resp.object_name[i],
                                                 resp.pointcloud[i],
                                                 resp.object_pose[i]))
+        self.uniquify_object_names()
+
         for model in self.model_list:
             model.model_name = model.model_name
-            model.point_cloud_data.header.frame_id = '/' + model.model_name
+            model.point_cloud_data.header.frame_id = '/' + model.object_name
 
-        self.uniquify_object_names()
+
 
     def publish_target_pointcloud(self):
         self.model_list.sort(key=ModelManager.get_dist)
@@ -122,7 +126,7 @@ class ModelRecManager(object):
             model_name = model.model_name
             object_name = model.object_name
             object_pose = model.get_world_pose()
-            object_info = graspit_msgs.msg.ObjectInfo(model_name, object_name, object_pose)
+            object_info = graspit_msgs.msg.ObjectInfo(object_name, model_name, object_pose)
             resp.object_info.append(object_info)
         return resp
         
