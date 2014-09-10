@@ -90,6 +90,8 @@ def close_barrett():
     """
     return open_barrett(2)
 
+def open_hand():
+    return open_barrett(0)
 
 def GetHandPose( whichmanip ):
     try:

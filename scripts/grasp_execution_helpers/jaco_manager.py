@@ -14,34 +14,27 @@ import jaco_msgs.msg
 import sys
 
 import ipdb
+import numpy
 
-
-def move_hand(angles, blocking=True):
-    client = actionlib.SimpleActionClient('/jaco_arm_driver/fingers/finger_positions',
-                                          jaco_msgs.msg.SetFingersPositionAction)
-
-    angles[0] = angles[0]*180/math.pi*6400/60
-    angles[1] = angles[1]*180/math.pi*6400/60
-    angles[2] = angles[2]*180/math.pi*6400/60
+def move_hand(positions, blocking=True):
+    client = actionlib.SimpleActionClient('/jaco_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
+    angles = numpy.zeros([3,1])
+    angles[0] = positions[0]*180/math.pi*6400/60
+    angles[1] = positions[1]*180/math.pi*6400/60
 
     goal = jaco_msgs.msg.SetFingersPositionGoal()
 
-    if len(sys.argv) < 4:
+    if len(positions) <= 4:
         goal.fingers.finger1 = angles[0]
         goal.fingers.finger2 = angles[1]
-        goal.fingers.finger3 = angles[2]
-
-        rospy.logwarn("Using test goal: \n%s", goal)
+        goal.fingers.finger3 = 0
     else:
-        goal.fingers.finger1 = angles[0]
-        goal.fingers.finger2 = angles[1]
-        goal.fingers.finger3 = angles[2]
+        return False, "Wrong joint number", positions
 
     if not client.wait_for_server():
         success = False
         reason = 'failed to connect to action server'
-        position = None
-        return success, reason, position
+        return success, reason, positions
     rospy.loginfo("Connected to Finger server")
 
     client.send_goal(goal)
@@ -53,13 +46,12 @@ def move_hand(angles, blocking=True):
         client.cancel_all_goals()
         success = False
         reason = 'Program interrupted from keyboard'
-        position = None
-        return success, reason, position
+        return success, reason, positions
     result = client.get_result()
-    position = [result.fingers.finger1, result.fingers.finger2, result.fingers.finger3]
+    positions = [result.fingers.finger1, result.fingers.finger2, result.fingers.finger3]
     success = True
     reason = None
-    return success, reason, position
+    return success, reason, positions
 
 
 def close_hand():
@@ -78,7 +70,7 @@ def move_hand_percentage(percentage):
        @param percentage - target relative positions.
     """
     jnts=get_mico_joints()
-    move_hand(array([jnts[0] * percentage, jnts[1] * percentage, 0]))
+    return move_hand(array([jnts[0] * percentage, jnts[1] * percentage, 0]))
 
 
 def get_mico_joints():
