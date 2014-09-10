@@ -9,6 +9,7 @@ import tf
 import rospy
 import tf_conversions
 import numpy as np
+import ipdb
 
 
 def barrett_positions_from_graspit_positions(positions):
