@@ -57,9 +57,9 @@ class GraspReachabilityAnalyzer():
         try:
             self.pick_plan_client.wait_for_server(rospy.Duration(3))
             self.pick_plan_client.send_goal(pickup_goal)
-            received_result = self.pick_plan_client.wait_for_result(rospy.Duration(3))
+            received_result = self.pick_plan_client.wait_for_result(rospy.Duration(rospy.get_param('allowed_planning_time', 20)))
         except Exception as e:
-            rospy.logerr(self.__name__ + " failed to reach pick action server with err: %s" % e.message)
+            rospy.logerr("failed to reach pick action server with err: %s" % e.message)
 
         if received_result:
             result = self.pick_plan_client.get_result()
@@ -71,8 +71,6 @@ class GraspReachabilityAnalyzer():
 
         rospy.loginfo("success of pick_plan_client:" + str(success))
 
-        #if success:
-        #    ipdb.set_trace()
 
         return success, result
 
