@@ -87,11 +87,10 @@ if __name__ == '__main__':
 
     try:
         rospy.init_node('grasp_analyzer_node')
-        move_group_name = rospy.get_param('/move_group_name', 'StaubliArm')
-
-        grasp_analyzer_node = GraspAnalyzerNode(move_group_name=move_group_name)
+        move_group_name = rospy.get_param('/arm_name', 'StaubliArm')
+        approach_frame = rospy.get_param('approach_tran_frame', '/approach_tran_frame')
+        grasp_analyzer_node = GraspAnalyzerNode(move_group_name=move_group_name, grasp_approach_tran_frame=approach_frame)
         loop = rospy.Rate(10)
-        ipdb.set_trace()
         while not rospy.is_shutdown():
             loop.sleep()
     except rospy.ROSInterruptException: pass
