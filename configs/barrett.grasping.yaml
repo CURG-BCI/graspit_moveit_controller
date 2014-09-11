@@ -1,0 +1,68 @@
+---
+hand_closing_subspace:
+  finger1/dist_joint: &DISTCLOSING 0.33333
+  finger2/dist_joint: *DISTCLOSING
+  finger3/dist_joint: *DISTCLOSING
+  finger1/med_joint: &MEDCLOSING 1
+  finger2/med_joint: *MEDCLOSIN
+  finger3/med_joint: *MEDCLOSING
+  finger1/prox_joint: 0
+  finger2/prox_joint: 0
+
+
+hand_closed_angle: 2
+
+hand_preshape_subspace: 
+  finger1/dist_joint: 0
+  finger2/dist_joint: 0
+  finger3/dist_joint: 0
+  finger1/med_joint: 0
+  finger2/med_joint: 0
+  finger3/med_joint: 0
+  finger1/prox_joint: 1
+  finger2/prox_joint: 1
+
+
+graspit_joint_order:
+  -finger1/prox_joint
+  -finger1/med_joint
+  -finger2/med_joint
+  -finger3/med_joint
+
+
+
+hand_joint_order:
+  -finger1/med_joint
+  -finger2/med_joint
+  -finger3/med_joint
+  -finger1/prox_joint
+
+joint_mimic:  
+  finger1/med_joint: 
+    ratio: 1
+    source: finger1/med_joint
+  finger2/med_joint: 
+    ratio: 1
+    source: finger2/med_joint
+  finger3/med_joint: 
+    ratio: 1
+    source: finger3/med_joint
+  finger1/dist_joint: 
+    ratio: *DISTCLOSING
+    source: finger1/med_joint
+  finger2/dist_joint: 
+    ratio: *DISTCLOSING
+    source: finger2/med_joint
+  finger3/dist_joint: 
+    ratio: *DISTCLOSING
+    source: finger3/med_joint
+  finger2/prox_joint: 
+    ratio: 1
+    source: finger1/prox_joint
+
+approach_dir_x: 0
+approach_dir_y: 0
+approach_dir_z: 1
+
+end_effector_name: end_effector
+
