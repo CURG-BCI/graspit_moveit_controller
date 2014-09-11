@@ -4,25 +4,15 @@ from sensor_msgs.msg import JointState
 
 class GraspJointMessageUtils:
     def __init__(self):
-        barrett_default_hand_closing_subspace = {'finger1/dist_joint': 1/3, 'finger1/med_joint': 1, 'finger1/prox_joint': 0,
-                                                 'finger2/dist_joint': 1/3, 'finger2/med_joint': 1, 'finger2/prox_joint': 0,
-                                                 'finger3/dist_joint': 1/3, 'finger3/med_joint': 1}
-        jaco_default_hand_closing_subspace = {'mico_joint_finger_1': 1, 'mico_joint_finger_1_distal': 0,
-                                              'mico_joint_finger_2': 1, 'mico_joint_finger_2_distal': 0}
-        self.hand_closing_subspace = rospy.get_param('/hand_closing_subspace', jaco_default_hand_closing_subspace)
-        barrett_default_hand_closed_angle = 2
-        jaco_default_hand_closed_angle = math.pi/180*60 ## ???
-        self.hand_closed_angle = rospy.get_param('/hand_closed_angle', jaco_default_hand_closed_angle)
-        barrett_default_hand_preshape_subspace = {'finger1/dist_joint': 0, 'finger1/med_joint': 0, 'finger1/prox_joint': 1,
-                                                  'finger2/dist_joint': 0, 'finger2/med_joint': 0, 'finger2/prox_joint': 1,
-                                                  'finger3/dist_joint': 0, 'finger3/med_joint': 0}
-        jaco_default_hand_preshape_subspace = {'mico_joint_finger_1': 0, 'mico_joint_finger_1_distal': 0,
-                                              'mico_joint_finger_2': 0, 'mico_joint_finger_2_distal': 0}
-        self.hand_preshape_subspace = rospy.get_param('/hand_preshape_subspace', jaco_default_hand_preshape_subspace)
-        barrett_default_hand_joint_order = ['finger1/med_joint', 'finger2/med_joint', 'finger3/med_joint',
-                                            'finger1/prox_joint']
-        jaco_default_hand_joint_order = ['mico_joint_finger_1', 'mico_joint_finger_2']
-        self.hand_joint_order = rospy.get_param('/hand_joint_order', jaco_default_hand_joint_order)
+       
+        self.hand_closing_subspace = rospy.get_param('hand_closing_subspace',{})
+        
+        self.hand_closed_angle = rospy.get_param('hand_closed_angle', math.pi)       
+        self.hand_preshape_subspace = rospy.get_param('hand_preshape_subspace',{})
+        self.hand_joint_order = rospy.get_param('hand_joint_order', [])
+        self.joint_mimic = rospy.get_param('joint_mimic',{})
+        self.graspit_joint_order = rospy.get_param('graspit_joint_order',self.hand_joint_order)
+
 
     def get_hand_preshape(self, joint_state_msg, percent_closed):
         output_msg = JointState()
@@ -42,3 +32,21 @@ class GraspJointMessageUtils:
                 joint_names.append(name)
                 output_angles.append(pos)
         return joint_names, output_angles
+
+
+    def joint_angles_to_joint_state_message(self, joint_angles):
+        joint_value_dict = dict(zip(self.hand_joint_order, joint_angles))
+        output_msg = JointState()
+        output_msg.name = self.joint_mimic.keys()
+        output_msg.position = []
+        for key in output_msg.name:
+            mimicked_joint = self.joint_mimic[key]
+            output_msg.position.append(mimicked_joint['ratio'] * joint_value_dict[mimicked_joint['source']])
+        return output_msg
+
+    def graspit_joint_angles_to_joint_state_message(self, graspit_joint_angles):
+        graspit_joint_angles_dict = {zip(self.graspit_joint_order,graspit_joint_angles)}
+        joint_angles = [graspit_joint_angles[joint] for joint in self.hand_joint_order]
+        return self.joint_angles_to_joint_state_message(joint_angles)
+        
+                                        

@@ -171,9 +171,9 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander,  gras
     #
     approach_dir = geometry_msgs.msg.Vector3Stamped()
     # Set default approach dir to the jaco approach dir.
-    x = rospy.get_param('/approach_dir_x', 0)
-    y = rospy.get_param('/approach_dir_y', 0)
-    z = rospy.get_param('/approach_dir_z', -1)
+    x = rospy.get_param('approach_dir_x', 0)
+    y = rospy.get_param('approach_dir_y', 0)
+    z = rospy.get_param('approach_dir_z', -1)
     approach_dir.vector = geometry_msgs.msg.Vector3(x,y,z)
     approach_dir.header.frame_id = grasp_tran_frame_name
     moveit_grasp.pre_grasp_approach.direction = get_approach_dir_in_ee_coords(move_group_commander, approach_dir)
