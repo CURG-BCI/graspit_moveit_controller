@@ -140,7 +140,7 @@ def add_table(world_manager):
     box_pose.header.frame_id = frame_id
     table_x = .92
     table_y = 1.22
-    table_z = .05
+    table_z = .01
     table_world_x_offset = -.68
     table_world_y_offset = -.19
     table_world_z_offset = 0
