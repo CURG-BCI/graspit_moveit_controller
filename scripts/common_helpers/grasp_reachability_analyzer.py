@@ -18,8 +18,8 @@ class GraspReachabilityAnalyzer():
         """
         self.pick_plan_client = actionlib.SimpleActionClient('/pickup', moveit_msgs.msg.PickupAction)
         self.move_group = move_group
-        self.move_group.set_workspace([-1.25, -.5, -.4, .25, .5, 1.6])
-
+        #self.move_group.set_workspace([-1.25, -.5, -.4, .25, .5, 1.6])
+        self.planner_id = 'SBLkConfigDefault'
         self.grasp_approach_tran_frame = grasp_approach_tran_frame
         self.grasp_dict = {}
 
@@ -63,7 +63,9 @@ class GraspReachabilityAnalyzer():
         received_result = False
         try:
             self.pick_plan_client.wait_for_server(rospy.Duration(3))
+            pickup_goal.planner_id = self.planner_id
             self.pick_plan_client.send_goal(pickup_goal)
+
             received_result = self.pick_plan_client.wait_for_result(rospy.Duration(rospy.get_param('allowed_planning_time', 20)))
         except Exception as e:
             rospy.logerr("failed to reach pick action server with err: %s" % e.message)
