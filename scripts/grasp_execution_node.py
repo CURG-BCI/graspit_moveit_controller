@@ -44,7 +44,8 @@ class GraspExecutor():
                                                             moveit_msgs.msg.DisplayTrajectory)
 
 
-        self.trajectory_action_client = actionlib.SimpleActionClient('/setFollowTrajectory',                                                                     control_msgs.msg.FollowJointTrajectoryAction)
+        self.trajectory_action_client = actionlib.SimpleActionClient('/setFollowTrajectory',
+                                                                     control_msgs.msg.FollowJointTrajectoryAction)
 
         if move_group_name != 'StaubliArm':
             self.hand_manager = common_helpers.GraspManager.GraspManager(jaco_manager)
@@ -57,6 +58,7 @@ class GraspExecutor():
 
         moveit_commander.roscpp_initialize(sys.argv)
         self.group = moveit_commander.MoveGroupCommander(move_group_name)
+        self.group.set_planner_id('manipulator[SBLkConfigDefault]')
 
         self.grasp_reachability_analyzer = GraspReachabilityAnalyzer(self.group, grasp_tran_frame_name)
 
@@ -81,13 +83,12 @@ class GraspExecutor():
             return False, "Failed to execute trajectory", []
 
         trajectory_result = self.trajectory_action_client.get_result()
-        trajectory_result = control_msgs.msg.FollowJointTrajectoryResult(trajectory_result)
-        control_msgs.msg.FollowJointTrajectoryResult(trajectory_result)
-
-        success = trajectory_result.SUCCESSFUL == trajectory_result.error_code.error_code
+        #trajectory_result = control_msgs.msg.FollowJointTrajectoryResult(trajectory_result)
+        #control_msgs.msg.FollowJointTrajectoryResult(trajectory_result)
 
         """:type : control_msgs.msg.FollowJointTrajectoryResult"""
-        success = (trajectory_result.SUCCESSFUL == trajectory_result.error_code.error_code)
+
+        success = (trajectory_result.SUCCESSFUL == trajectory_result.error_code)
 
         return success, None, trajectory_result
 
@@ -112,6 +113,32 @@ class GraspExecutor():
         display_msg.trajectory = trajectory_msg
         display_msg.model_id = self.group.get_name()
         self.display_trajectory_publisher.publish(display_msg)
+
+    def fix_stage_0(self, pickup_result):
+        grasp_status_msg = ''
+        success = False
+
+        if (pickup_result.trajectory_stages[0].joint_trajectory.joint_names !=
+                pickup_result.trajectory_stages[2].joint_trajectory.joint_names):
+            grasp_status_msg = ("joint names and order of stages 0 and 2 must agree! Aborting."
+                                " Stage 0: %s, Stage 1: %s"%(
+                                pickup_result.trajectory_stages[0].joint_trajectory.joint_names,
+                                pickup_result.trajectory_stages[2].joint_trajectory.joint_names))
+            rospy.logerror(grasp_status_msg)
+
+        else:
+            if (pickup_result.trajectory_stages[0].joint_trajectory.points[0].positions !=
+                    pickup_result.trajectory_stages[2].joint_trajectory.points[-1].positions):
+                stage2_start = pickup_result.trajectory_stages[2].joint_trajectory.points[0]
+                pickup_result.trajectory_stages[0].joint_trajectory.points.append(stage2_start)
+                grasp_status_msg = 'Stage 0 and Stage 2 were misaligned. Fixed missing trajectory point'
+
+            else:
+                grasp_status_msg = 'Stage 0 and Stage 2 were already aligned. No fix needed.'
+            rospy.loginfo(grasp_status_msg)
+            success = True
+
+        return success, grasp_status_msg, pickup_result
 
     def process_grasp_msg(self, grasp_msg):
         """@brief - Attempt to grasp the object and lift it
@@ -140,8 +167,12 @@ class GraspExecutor():
             if self.robot_running:
 
                 home_joint_values = rospy.get_param('home_joint_values',[0, 0, 0, 0, 0, 0])
-                if not numpy.allclose(home_joint_values, self.group.get_current_joint_values()):
+                current_joint_values = self.group.get_current_joint_values()
+                if not numpy.allclose(home_joint_values, current_joint_values, 0.2):
+                    
                     print 'go home'
+                    print home_joint_values
+                    print current_joint_values
                     self.group.set_planning_time(rospy.get_param('allowed_planning_time', 20))
                     self.group.set_start_state_to_current_state()
                     self.group.set_named_target("home")
@@ -180,6 +211,9 @@ class GraspExecutor():
                 success, result = self.grasp_reachability_analyzer.query_moveit_for_reachability(grasp_msg)
                 if not success:
                     grasp_status_msg = "MoveIt Failed to plan pick"
+
+            if success:
+                success, grasp_status_msg, result = self.fix_stage_0(result)
 
             #Now run stuff on the robot
             if self.robot_running:
