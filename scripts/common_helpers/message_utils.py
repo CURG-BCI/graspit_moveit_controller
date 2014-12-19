@@ -10,6 +10,7 @@ import rospy
 import tf_conversions
 import numpy as np
 import ipdb
+import math
 
 
 def barrett_positions_from_graspit_positions(positions):
@@ -44,7 +45,7 @@ def mico_positions_from_graspit_positions(positions):
     :returns a pair containing the joint names array & the joint positions
     :rtype (list[string],list[float])
     """
-    joint_positions = [positions[0], positions[1]]
+    joint_positions = [positions[0], positions[0]]
     joint_names = ['mico_joint_finger_1', 'mico_joint_finger_2']
     return joint_names, joint_positions
 
@@ -308,7 +309,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # float64 allowed_planning_time
     #
-    pickup_goal.allowed_planning_time = rospy.get_param('allowed_planning_time',20)
+    pickup_goal.allowed_planning_time = rospy.get_param('allowed_planning_time', 5)
 
     # # Planning options
     #
@@ -319,4 +320,16 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     pickup_goal.planning_options.look_around = False
     pickup_goal.planning_options.replan_delay = 10.0
 
+    ## Constraints
+    """
+    joint_tolerance = rospy.get_param('joint_path_tolerance',math.pi)
+    rospy.loginfo('joint tolerance constraint in planner %f'%(joint_tolerance))
+    joint_names = planning_group.get_joints()
+    joint_values = planning_group.get_current_joint_values()
+    joint_constraints = [moveit_msgs.msg.JointConstraint(joint_name=name, position=val, tolerance_above=joint_tolerance,
+                                                         tolerance_below=joint_tolerance, weight=1)
+                         for name, val in zip(joint_names, joint_values)]
+
+    pickup_goal.path_constraints.joint_constraints = joint_constraints
+    """
     return pickup_goal
