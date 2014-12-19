@@ -18,8 +18,8 @@ class GraspJointMessageUtils:
         output_msg = JointState()
         for name, pos in zip(joint_state_msg.name, joint_state_msg.position):
             if name in self.hand_closing_subspace.keys():
-                joint_value = self.hand_preshape_subspace[name] * pos + \
-                    self.hand_closing_subspace[name] * percent_closed * self.hand_closed_angle
+                joint_value = (self.hand_preshape_subspace[name] * pos +
+                               self.hand_closing_subspace[name] * percent_closed * self.hand_closed_angle)
                 output_msg.name.append(name)
                 output_msg.position.append(joint_value)
         return output_msg

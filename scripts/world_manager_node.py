@@ -17,12 +17,18 @@ import tf
 import tf.transformations
 roslib.load_manifest('moveit_trajectory_planner')
 import ipdb
+import moveit_msgs
+import moveit_msgs.srv
+from moveit_msgs.msg import PlanningSceneComponents
 
 class WorldManager:
 
     def __init__(self):
         moveit_commander.roscpp_initialize(sys.argv)
         self.scene = ExtendedPlanningSceneInterface()
+        """
+        :type self.robot :moveit_commander.RobotCommander
+        """
         self.robot = moveit_commander.RobotCommander()
 
         #model_rec_manager for all the objects in the enviornment
@@ -49,6 +55,21 @@ class WorldManager:
         self.reload_model_list_server = rospy.Service('model_manager/reload_model_list',
                                                       Empty,
                                                       self.reload_model_list)
+        planning_scene_service = rospy.ServiceProxy("/get_planning_scene", moveit_msgs.srv.GetPlanningScene)
+        try:
+            rospy.wait_for_service("/get_planning_scene", 1)
+            components = PlanningSceneComponents(PlanningSceneComponents.WORLD_OBJECT_NAMES + PlanningSceneComponents.TRANSFORMS)
+            """
+            :type ps_response :moveit_msgs.srv.GetPlanningSceneResponse
+            """
+            ps_request = moveit_msgs.srv.GetPlanningSceneRequest(components=components)
+            ps_response = planning_scene_service.call(ps_request)
+
+            self.body_name_cache = [co.id for co in ps_response.scene.world.collision_objects]
+            rospy.loginfo("body name cache:%s"%(', '.join(self.body_name_cache)))
+        except Exception as e:
+            rospy.logwarn("Failed to find service /get_planning_scene %s"%(e))
+
 
     def handle_add_box(self, req):
         box_dimensions = (req.sizeX, req.sizeY, req.sizeZ)
@@ -83,10 +104,13 @@ class WorldManager:
         return []
 
     def reload_model_list(self, empty_msg):
-        self.model_manager.read()
+        #self.model_manager.read()
 
         #self.remove_object_publisher.publish('ALL') #commented lines for graspit
         #self.publish_table_models()
+        if not len(self.body_name_cache):
+            self.refresh_model_list(empty_msg)
+            return []
         self.remove_all_objects_from_planner()
         self.add_all_objects_to_planner()
         return []
@@ -103,9 +127,11 @@ class WorldManager:
         """
         for index in range(len(self.body_name_cache)):
             body_name = self.body_name_cache[index]
+            rospy.logwarn("removing body: body_name %s"%(body_name))
             self.scene.remove_world_object(body_name)
             #del self.body_name_cache[index]
             #del body_name
+        self.body_name_cache = []
 
     def add_all_objects_to_planner(self):
         """
@@ -124,6 +150,8 @@ class WorldManager:
 
                 stampedModelPose.pose = model.get_world_pose()
                 self.scene.add_mesh_autoscaled(model.object_name, stampedModelPose, filename)
+                
+                #self.scene.remove_world_object(model.object_name)
             else:
                 rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(model.object_name, filename))
 
@@ -134,27 +162,54 @@ def add_table(world_manager):
 
     time.sleep(1)
     rospy.wait_for_service('moveit_trajectory_planner/add_box')
-    frame_id = "/world"
+    frame_id = "/root"
     rospy.loginfo("adding table in planning frame: " + str(frame_id))
     box_pose = geometry_msgs.msg.PoseStamped()
     box_pose.header.frame_id = frame_id
     table_x = rospy.get_param('/table_x', 1.45)
     table_y = rospy.get_param('/table_y', .74)
     table_z = rospy.get_param('/table_z', .05)
-    table_world_x_offset = rospy.get_param('/table_world_x_offset',-.07)
-    table_world_y_offset = rospy.get_param('/table_world_y_offset',-.22)
-    table_world_z_offset = rospy.get_param('/table_world_z_offset',-.05)
-    box_pose.pose.position.x = table_x/2.0 + table_world_x_offset
-    box_pose.pose.position.y = table_y/2.0 + table_world_y_offset
-    box_pose.pose.position.z = table_z/2.0 + table_world_z_offset
+    table_world_x_offset = rospy.get_param('/table_world_x_offset',-.05)
+    table_world_y_offset = rospy.get_param('/table_world_y_offset',-.05)
+    table_world_z_offset = rospy.get_param('/table_world_z_offset',-.1125)
+    box_pose.pose.position.x = table_world_x_offset
+    box_pose.pose.position.y = table_world_y_offset
+    box_pose.pose.position.z = table_world_z_offset
     box_pose.pose.orientation.x = 0
     box_pose.pose.orientation.y = 0
     box_pose.pose.orientation.z = 0
     box_pose.pose.orientation.w = 0
     box_dimensions = (table_x, table_y, table_z)
 
-    world_manager.scene.add_box("table", box_pose, box_dimensions)
+    world_manager.scene.attach_box(world_manager.robot.get_link_names()[1], "table", box_pose, box_dimensions)
     rospy.loginfo("table added")
+
+
+def add_base(world_manager):
+
+    time.sleep(1)
+    rospy.wait_for_service('moveit_trajectory_planner/add_box')
+    frame_id = "/root"
+    rospy.loginfo("adding table in planning frame: " + str(frame_id))
+    box_pose = geometry_msgs.msg.PoseStamped()
+    box_pose.header.frame_id = frame_id
+    base_x = rospy.get_param('/base_x', 0.2)
+    base_y = rospy.get_param('/base_y', 0.15)
+    base_z = rospy.get_param('/base_z', 0.01)
+    base_robot_x_offset = rospy.get_param('/base_robot_x_offset',0)
+    base_robot_y_offset = rospy.get_param('/base_robot_y_offset',0)
+    base_robot_z_offset = rospy.get_param('/base_robot_z_offset',-0.08)
+    box_pose.pose.position.x = base_robot_x_offset
+    box_pose.pose.position.y = base_robot_y_offset
+    box_pose.pose.position.z = base_robot_z_offset
+    box_pose.pose.orientation.x = 0
+    box_pose.pose.orientation.y = 0
+    box_pose.pose.orientation.z = 0
+    box_pose.pose.orientation.w = 0
+    box_dimensions = (base_x, base_y, base_z)
+
+    world_manager.scene.attach_box(world_manager.robot.get_link_names()[1], "robot_base", box_pose, box_dimensions)
+    rospy.loginfo("base added")
 
 def add_walls(world_manager):
 
@@ -202,7 +257,7 @@ if __name__ == '__main__':
         world_manager = WorldManager()
         add_table(world_manager)
         add_walls(world_manager)
-
+        add_base(world_manager)
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():
             world_manager.model_manager.rebroadcast_object_tfs()
