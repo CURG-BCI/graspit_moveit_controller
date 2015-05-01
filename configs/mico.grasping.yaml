@@ -39,3 +39,6 @@ approach_dir_y: 0
 approach_dir_z: -1
 
 end_effector_name: end_effector
+
+grasp_executer/planner_config_name: '[SBLkConfigDefault2]'
+grasp_analyzer/planner_config_name: '[PRMkConfigDefault]'

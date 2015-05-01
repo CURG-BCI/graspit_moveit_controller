@@ -171,7 +171,7 @@ def add_table(world_manager):
     table_z = rospy.get_param('/table_z', .05)
     table_world_x_offset = rospy.get_param('/table_world_x_offset',-.05)
     table_world_y_offset = rospy.get_param('/table_world_y_offset',-.05)
-    table_world_z_offset = rospy.get_param('/table_world_z_offset',-.1125)
+    table_world_z_offset = rospy.get_param('/table_world_z_offset',-.0525)
     box_pose.pose.position.x = table_world_x_offset
     box_pose.pose.position.y = table_world_y_offset
     box_pose.pose.position.z = table_world_z_offset
@@ -181,7 +181,7 @@ def add_table(world_manager):
     box_pose.pose.orientation.w = 0
     box_dimensions = (table_x, table_y, table_z)
 
-    world_manager.scene.attach_box(world_manager.robot.get_link_names()[1], "table", box_pose, box_dimensions)
+    world_manager.scene.attach_box(world_manager.robot.get_link_names()[0], "table", box_pose, box_dimensions)
     rospy.loginfo("table added")
 
 
@@ -198,7 +198,7 @@ def add_base(world_manager):
     base_z = rospy.get_param('/base_z', 0.01)
     base_robot_x_offset = rospy.get_param('/base_robot_x_offset',0)
     base_robot_y_offset = rospy.get_param('/base_robot_y_offset',0)
-    base_robot_z_offset = rospy.get_param('/base_robot_z_offset',-0.08)
+    base_robot_z_offset = rospy.get_param('/base_robot_z_offset',-0.02)
     box_pose.pose.position.x = base_robot_x_offset
     box_pose.pose.position.y = base_robot_y_offset
     box_pose.pose.position.z = base_robot_z_offset
@@ -256,8 +256,8 @@ if __name__ == '__main__':
 
         world_manager = WorldManager()
         add_table(world_manager)
-        add_walls(world_manager)
-        add_base(world_manager)
+        #add_walls(world_manager)
+        #add_base(world_manager)        
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():
             world_manager.model_manager.rebroadcast_object_tfs()

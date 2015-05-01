@@ -26,9 +26,9 @@ large_shaving_gel_file_name = get_path('object_models', 'gillette_shaving_gel.pl
 coke_file_name = get_path('object_models', 'coke_can.iv')
 odwalla_file_name = get_path('object_models', 'odwalla_bottle.iv')
 
-all_file_name = get_path('object_models', 'all.stl')
-garnier_file_name = get_path('object_models', 'garnier_shampoo_bottle.ply')
-gillette_file_name = get_path('object_models', 'gillette_shaving_gel.ply')
+all_file_name = get_path('object_models', 'all_convex.stl')
+garnier_file_name = get_path('object_models', 'garnier_shampoo_bottle_convex.stl')
+gillette_file_name = get_path('object_models', 'gillette_shaving_gel_convex.stl')
 milk_carton_file_name = get_path('object_models', 'milk_carton.ply')
 
 

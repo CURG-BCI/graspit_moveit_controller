@@ -17,7 +17,7 @@ import ipdb
 import numpy
 
 def move_hand(positions, blocking=True):
-    client = actionlib.SimpleActionClient('/jaco_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
+    client = actionlib.SimpleActionClient('/mico_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
     angles = numpy.zeros([3,1])
     angles[0] = positions[0]*180/math.pi*6400/60
     angles[1] = positions[1]*180/math.pi*6400/60
@@ -27,7 +27,7 @@ def move_hand(positions, blocking=True):
     if len(positions) <= 4:
         goal.fingers.finger1 = angles[0]
         goal.fingers.finger2 = angles[1]
-        goal.fingers.finger3 = 0
+        goal.fingers.finger3 = 0.0
     else:
         return False, "Wrong joint number", positions
 
@@ -78,6 +78,6 @@ def get_mico_joints():
 
        Returns the current joint position of the hand as a list.
     """
-    msg = rospy.wait_for_message("/jaco_arm_driver/out/finger_position", jaco_msgs.msg.FingerPosition)
+    msg = rospy.wait_for_message("/mico_arm_driver/out/finger_position", jaco_msgs.msg.FingerPosition)
     return [msg.finger1, msg.finger2, msg.finger3]
 

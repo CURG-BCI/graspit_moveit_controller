@@ -43,30 +43,29 @@ class GraspExecutor():
         self.display_trajectory_publisher = rospy.Publisher("/move_group/display_planned_path",
                                                             moveit_msgs.msg.DisplayTrajectory)
 
-
-        self.trajectory_action_client = actionlib.SimpleActionClient('/setFollowTrajectory',
-                                                                     control_msgs.msg.FollowJointTrajectoryAction)
-
-        if move_group_name != 'StaubliArm':
-            self.hand_manager = common_helpers.GraspManager.GraspManager(jaco_manager)
+        if move_group_name == 'StaubliArm':
+            self.trajectory_action_client = actionlib.SimpleActionClient('/setFollowTrajectory',  control_msgs.msg.FollowJointTrajectoryAction)
+            self.hand_manager = common_helpers.GraspManager.GraspManager(barrett_manager, move_group_name)
         else:
-            self.hand_manager = common_helpers.GraspManager.GraspManager(barrett_manager)
+            self.trajectory_action_client = actionlib.SimpleActionClient('/mico_arm_driver/controller/follow_joint_trajectory',  control_msgs.msg.FollowJointTrajectoryAction)
+            self.hand_manager = common_helpers.GraspManager.GraspManager(jaco_manager, move_group_name)
 
         self.last_grasp_time = 0
-        self.table_cube = [geometry_msgs.msg.Point(-0.7, 0, -0.02), geometry_msgs.msg.Point(0.2, 1, 1)]
+        #self.table_cube = [geometry_msgs.msg.Point(-0.7, 0, -0.02), geometry_msgs.msg.Point(0.2, 1, 1)]
         self.robot_running = use_robot_hw
 
         moveit_commander.roscpp_initialize(sys.argv)
         self.group = moveit_commander.MoveGroupCommander(move_group_name)
-        self.group.set_planner_id('manipulator[SBLkConfigDefault]')
-
+        #self.group.set_planner_id(move_group_name + 'SBLkConfigDefault2]')
+        
         self.grasp_reachability_analyzer = GraspReachabilityAnalyzer(self.group, grasp_tran_frame_name)
-
+        self.grasp_reachability_analyzer.planner_id = move_group_name + rospy.get_param('grasp_executer/planner_config_name','SBLkConfigDefault2')
         self.preshape_ratio = .5
 
         if bool(rospy.get_param('reload_model_rec', 0)):
             self.reload_model_list([])
         rospy.loginfo(self.__class__.__name__ + " is initialized")
+
 
     def run_trajectory(self, trajectory_msg):
         """:type : control_msgs.msg.FollowJointTrajectoryResult"""
@@ -151,7 +150,7 @@ class GraspExecutor():
         #try:
             #Reject multiple grasp messages sent too fast. They are likely a mistake
             #FIXME - We should probably just set the queue size to 1.
-            if (time() - self.last_grasp_time) < 30:
+            if (time() - self.last_grasp_time) < 3:
                 return [], []
             self.last_grasp_time = time()
 
@@ -173,7 +172,7 @@ class GraspExecutor():
                     print 'go home'
                     print home_joint_values
                     print current_joint_values
-                    self.group.set_planning_time(rospy.get_param('allowed_planning_time', 20))
+                    self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 20))
                     self.group.set_start_state_to_current_state()
                     self.group.set_named_target("home")
                     plan = self.group.plan()
@@ -200,7 +199,7 @@ class GraspExecutor():
                 #Preshape the hand to the grasps' spread angle
 
                 if self.robot_running:
-
+                    
                     rospy.logerr('GraspExecutor::process_grasp_msg::pre-grasp')
                     #Pregrasp the object
                     if not success:
@@ -208,12 +207,18 @@ class GraspExecutor():
 
             if success:
                 #Move to the goal location and grasp object
-                success, result = self.grasp_reachability_analyzer.query_moveit_for_reachability(grasp_msg)
+                for i in xrange(10):
+                    success, result = self.grasp_reachability_analyzer.query_moveit_for_reachability(grasp_msg)
+                    if success:
+                        break
+                    else:
+                        print("Planning attempt %i"%(i))
+                    
                 if not success:
                     grasp_status_msg = "MoveIt Failed to plan pick"
 
-            if success:
-                success, grasp_status_msg, result = self.fix_stage_0(result)
+            #if success:
+            #    success, grasp_status_msg, result = self.fix_stage_0(result)
 
             #Now run stuff on the robot
             if self.robot_running:
@@ -237,6 +242,7 @@ class GraspExecutor():
                 if success:
                     #Close the hand completely until the motors stall or they hit
                     #the final grasp DOFS
+                    rospy.loginfo('in phase 3')
                     success, grasp_status_msg = self.hand_manager.move_hand_trajectory(result.trajectory_stages[3].joint_trajectory)
                     rospy.loginfo("run pickup phase 3 success:%i"%success)
 
@@ -244,6 +250,7 @@ class GraspExecutor():
                 if success:
                     #Now close the hand completely until the motors stall.
                     grasp_joint_state = self.hand_manager.joint_trajectory_to_joint_state(result.trajectory_stages[3].joint_trajectory, 0)
+                    rospy.loginfo('in close hand')
                     success, grasp_status_msg, joint_angles = self.hand_manager.close_grasp(grasp_joint_state)
                     rospy.loginfo("closing hand completely success:%i"%success)
 
@@ -253,7 +260,8 @@ class GraspExecutor():
 
                 #Now wait for user input on whether or not to lift the object
                 if success:
-                    selection = int(raw_input('Lift up (1) or not (0): '))
+                    selection = 1
+                    #selection = int(raw_input('Lift up (1) or not (0): '))
                     if selection == 1:
                         rospy.loginfo('GraspExecutor::process_grasp_msg::lift up the object')
                         #Lift the object using the staubli's straight line path planner
@@ -269,13 +277,12 @@ class GraspExecutor():
             if success:
                 rospy.logwarn(grasp_status_msg)
             else:
-                ipdb.set_trace()
                 rospy.logfatal(grasp_status_msg)
             #Tell graspit whether the grasp succeeded
             self.graspit_status_publisher.publish(grasp_status, grasp_status_msg, -1)
             
             rospy.loginfo('GraspExecutor::process_grasp_msg::' + str(grasp_status_msg))
-            ipdb.set_trace()
+            #ipdb.set_trace()
             return grasp_status, grasp_status_msg
 
         #except Exception as e:
@@ -292,11 +299,12 @@ if __name__ == '__main__':
 
         use_robot_hw = rospy.get_param('use_robot_hw', False)
         move_group_name = rospy.get_param('/arm_name', 'StaubliArm')
-        grasp_approach_tran_frame = rospy.get_param('/approach_tran_frame','/approach_tran_frame')
+        grasp_approach_tran_frame = rospy.get_param('/approach_tran_frame','/approach_tran')
         print use_robot_hw
         rospy.loginfo("use_robot_hw value %d \n" % use_robot_hw)
 
         ge = GraspExecutor(use_robot_hw=use_robot_hw, move_group_name=move_group_name, grasp_tran_frame_name=grasp_approach_tran_frame)
+
 
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():

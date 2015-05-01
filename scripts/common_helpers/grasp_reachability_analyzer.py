@@ -22,6 +22,7 @@ class GraspReachabilityAnalyzer():
         self.planner_id = 'SBLkConfigDefault'
         self.grasp_approach_tran_frame = grasp_approach_tran_frame
         self.grasp_dict = {}
+        self.listener = tf.TransformListener()
 
     def query_moveit_for_reachability(self, graspit_grasp_msg):
         """
@@ -29,8 +30,9 @@ class GraspReachabilityAnalyzer():
         """
         #ipdb.set_trace()
         #return self.pose_reachability_checker(graspit_grasp_msg.final_grasp_pose, graspit_grasp_msg.object_name)
-        moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,
+        moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,                                                                       
                                                                        self.move_group,
+                                                                       self.listener,
                                                                        self.grasp_approach_tran_frame)
         self.grasp_dict[moveit_grasp_msg.id] = moveit_grasp_msg
         rospy.loginfo("moveit_grasp_msg: " + str(moveit_grasp_msg))
@@ -66,7 +68,7 @@ class GraspReachabilityAnalyzer():
             pickup_goal.planner_id = self.planner_id
             self.pick_plan_client.send_goal(pickup_goal)
 
-            received_result = self.pick_plan_client.wait_for_result(rospy.Duration(rospy.get_param('allowed_planning_time', 20)))
+            received_result = self.pick_plan_client.wait_for_result(rospy.Duration(rospy.get_param('~allowed_planning_time', 20)))
         except Exception as e:
             rospy.logerr("failed to reach pick action server with err: %s" % e.message)
 
