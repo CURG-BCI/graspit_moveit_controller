@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(moveit_trajectory_planner)
 
 find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
-                                        trajectory_msgs moveit_msgs geometry_msgs graspit_msgs model_rec2)
+                                        trajectory_msgs moveit_msgs geometry_msgs graspit_msgs model_rec2 actionlib)
 
 
 
@@ -15,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
    ObjectName.srv
 
  )
+
+add_action_files(DIRECTORY action FILES RunObjectRecognition.action CheckGraspReachability.action)
  
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
@@ -26,6 +28,9 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
    geometry_msgs
    graspit_msgs
    model_rec2
+   actionlib_msgs
  )
 
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS actionlib
+)

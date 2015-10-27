@@ -266,12 +266,13 @@ class GraspExecutor():
                         rospy.loginfo('GraspExecutor::process_grasp_msg::lift up the object')
                         #Lift the object using the staubli's straight line path planner
                         success, grasp_status_msg, trajectory_result = self.run_pickup_trajectory(result, 4)
-                        rospy.loginfo("run pickup phase 4 success:%i"%success)
-                        if not success:
+                        rospy.loginfo("run pickup phase 4 success:%i" % success)
+                        if success:
+                            rospy.logerr('GraspExecutor::process_grasp_msg::not lift up the object')
+                        else:
                             grasp_status = graspit_msgs.msg.GraspStatus.UNREACHABLE
                             grasp_status_msg = "Couldn't lift object"
-                        else:
-                            rospy.logerr('GraspExecutor::process_grasp_msg::not lift up the object')
+
 
             #Maybe decide if it has been successfully lifted here...
             if success:

@@ -5,6 +5,7 @@ import roslib
 
 import graspit_msgs.msg
 import moveit_trajectory_planner.srv
+import moveit_trajectory_planner.msg
 import graspit_msgs.srv
 from grasp_analyzer_helpers.demonstration_pose_analyzer import DemonstrationPoseAnalyzer
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
@@ -12,6 +13,7 @@ from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 import sys
 import moveit_commander
 import ipdb
+import actionlib
 roslib.load_manifest('moveit_trajectory_planner')
 
 
@@ -42,6 +44,12 @@ class GraspAnalyzerNode(object):
         self.analyze_pose_service = rospy.Service(demo_pose_topic,
                                                   graspit_msgs.srv.AnalyzePose,
                                                   self.analyze_demonstration_pose)
+
+        self._analyze_grasp_as = actionlib.SimpleActionServer("analyze_grasp_action",
+                                                        moveit_trajectory_planner.msg.CheckGraspReachabilityAction,
+                                                        execute_cb=self.analyze_grasp_reachability_cb,
+                                                        auto_start=False)
+        self._analyze_grasp_as.start()
 
         self.demonstration_pose_analyzer = DemonstrationPoseAnalyzer()
 
@@ -84,6 +92,27 @@ class GraspAnalyzerNode(object):
         rospy.loginfo(self.__class__.__name__ + " finished analyze grasp request: " + str(response))
         return response
 
+    def analyze_grasp_reachability_cb(self, goal):
+        """
+        @param location_info_req: grasp message to analyze
+        :type location_info_req: moveit_msgs.srv.LocationInfoRequest
+        @return: Whether the grasp is expected to succeed
+        @rtype: bool
+        """
+        _result = moveit_trajectory_planner.msg.CheckGraspReachabilityResult()
+
+        #rospy.loginfo(self.__class__.__name__ + " received analyze grasp request: " + str(goal))
+
+        grasp_msg = goal.grasp
+        success, result = self.grasp_reachability_analyzer.query_moveit_for_reachability(grasp_msg)
+
+        self.demonstration_pose_analyzer.train_model(grasp_msg, success)
+
+        _result.isPossible = success
+        _result.grasp_id = goal.grasp.grasp_id
+        rospy.loginfo(self.__class__.__name__ + " finished analyze grasp request: " + str(_result))
+        self._analyze_grasp_as.set_succeeded(_result)
+        return _result
 
 
 
