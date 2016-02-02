@@ -216,9 +216,9 @@ class WorldManager:
         table_x = rospy.get_param('/table_x', 1.45)
         table_y = rospy.get_param('/table_y', .74)
         table_z = rospy.get_param('/table_z', .05)
-        table_world_x_offset = rospy.get_param('/table_world_x_offset',-.05)
-        table_world_y_offset = rospy.get_param('/table_world_y_offset',-.05)
-        table_world_z_offset = rospy.get_param('/table_world_z_offset',-.0525)
+        table_world_x_offset = rospy.get_param('/table_world_x_offset', -.05)
+        table_world_y_offset = rospy.get_param('/table_world_y_offset', -.05)
+        table_world_z_offset = rospy.get_param('/table_world_z_offset', -.0525)
         box_pose.pose.position.x = table_world_x_offset
         box_pose.pose.position.y = table_world_y_offset
         box_pose.pose.position.z = table_world_z_offset

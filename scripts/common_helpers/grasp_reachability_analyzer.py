@@ -23,6 +23,7 @@ class GraspReachabilityAnalyzer():
         self.grasp_approach_tran_frame = grasp_approach_tran_frame
         self.grasp_dict = {}
         self.listener = tf.TransformListener()
+        self.has_msg = False
 
     def query_moveit_for_reachability(self, graspit_grasp_msg):
         """
@@ -30,6 +31,7 @@ class GraspReachabilityAnalyzer():
         """
         #ipdb.set_trace()
         #return self.pose_reachability_checker(graspit_grasp_msg.final_grasp_pose, graspit_grasp_msg.object_name)
+
         moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,                                                                       
                                                                        self.move_group,
                                                                        self.listener,
@@ -51,6 +53,12 @@ class GraspReachabilityAnalyzer():
         pickup_goal = message_utils.build_pickup_goal(moveit_grasp_msg=moveit_grasp_msg,
                                                       object_name=graspit_grasp_msg.object_name,
                                                       planning_group=self.move_group)
+        # if not self.has_msg:
+        #     self.has_msg = True
+        #     rospy.loginfo("Entering IPython")
+        #     import IPython
+        #     IPython.embed()
+
         pick_attempt_succeeded = False
         #try:
         #    pick_attempt_succeeded = self.move_group.pick(graspit_grasp_msg.object_name, [moveit_grasp_msg])
@@ -59,7 +67,7 @@ class GraspReachabilityAnalyzer():
         #    rospy.logerr("pickup attempt failed: %s"%(e.message))
         #rospy.loginfo("pickup attempt result: %s"%(str(pick_attempt_succeeded)))
 
-        #rospy.loginfo("pickup_goal: " + str(pickup_goal))
+        rospy.loginfo("pickup_goal: " + str(pickup_goal))
 
 
         received_result = False

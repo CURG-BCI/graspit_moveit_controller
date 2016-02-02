@@ -243,6 +243,8 @@ class GraspExecutor():
                     #Close the hand completely until the motors stall or they hit
                     #the final grasp DOFS
                     rospy.loginfo('in phase 3')
+                    #import IPython
+                    #IPython.embed()
                     success, grasp_status_msg = self.hand_manager.move_hand_trajectory(result.trajectory_stages[3].joint_trajectory)
                     rospy.loginfo("run pickup phase 3 success:%i"%success)
 
@@ -251,8 +253,10 @@ class GraspExecutor():
                     #Now close the hand completely until the motors stall.
                     grasp_joint_state = self.hand_manager.joint_trajectory_to_joint_state(result.trajectory_stages[3].joint_trajectory, 0)
                     rospy.loginfo('in close hand')
+                    #import IPython
                     success, grasp_status_msg, joint_angles = self.hand_manager.close_grasp(grasp_joint_state)
-                    rospy.loginfo("closing hand completely success:%i"%success)
+                    #self.hand_manager.close_hand()
+                    rospy.loginfo("closing hand completely success:%i" % success)
 
 
                 if not success:
