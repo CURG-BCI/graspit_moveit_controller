@@ -7,7 +7,7 @@ import rospy
 import moveit_commander
 
 import geometry_msgs.msg
-from moveit_trajectory_planner.srv import *
+from graspit_msgs.srv import *
 from std_srvs.srv import Empty
 
 from world_manager_helpers.extended_planning_scene_interface import ExtendedPlanningSceneInterface
@@ -21,7 +21,7 @@ import moveit_msgs
 import moveit_msgs.srv
 from moveit_msgs.msg import PlanningSceneComponents
 import actionlib
-import moveit_trajectory_planner.msg
+import graspit_msgs.msg
 
 class WorldManager:
 
@@ -62,7 +62,7 @@ class WorldManager:
         self.force_use_moveit = rospy.get_param("use_moveit", 1)
 
         self._run_recognition_as = actionlib.SimpleActionServer("recognize_objections_action",
-                                                                moveit_trajectory_planner.msg.RunObjectRecognitionAction,
+                                                                graspit_msgs.msg.RunObjectRecognitionAction,
                                                                 execute_cb=self._run_recognition_as_cb,
                                                                 auto_start=False)
         self._run_recognition_as.start()
@@ -133,7 +133,7 @@ class WorldManager:
         self.remove_all_objects_from_planner()
         self.add_all_objects_to_planner()
         #need to return [] for empty response.
-        _result = moveit_trajectory_planner.msg.RunObjectRecognitionResult()
+        _result = graspit_msgs.msg.RunObjectRecognitionResult()
         for model in self.model_manager.model_list:
             model_name = model.model_name
             object_name = model.object_name
