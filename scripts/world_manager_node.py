@@ -23,6 +23,8 @@ from moveit_msgs.msg import PlanningSceneComponents
 import actionlib
 import graspit_msgs.msg
 
+from moveit_trajectory_planner.srv import *
+
 class WorldManager:
 
     def __init__(self):
