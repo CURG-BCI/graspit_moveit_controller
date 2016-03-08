@@ -1,0 +1,44 @@
+---
+hand_closing_subspace:
+  mico_joint_finger_1: 1
+  mico_joint_finger_1_distal: 0
+  mico_joint_finger_2: 1
+  mico_joint_finger_2_distal: 0
+
+
+hand_closed_angle: 1.047 
+
+hand_preshape_subspace: 
+  mico_joint_finger_1: 0
+  mico_joint_finger_1_distal: 0
+  mico_joint_finger_2: 0
+  mico_joint_finger_2_distal: 0
+
+
+hand_joint_order:
+  - mico_joint_finger_1
+  - mico_joint_finger_2
+
+
+joint_mimic:  
+  mico_joint_finger_1:
+    ratio: 1
+    source: mico_joint_finger_1
+  mico_joint_finger_2:
+    ratio: 1
+    source: mico_joint_finger_2
+  mico_joint_finger_1_distal: 
+    ratio: 0
+    source: mico_joint_finger_1
+  mico_joint_finger_2_distal: 
+    ratio: 0
+    source: mico_joint_finger_2
+
+approach_dir_x: 0
+approach_dir_y: 0
+approach_dir_z: -1
+
+end_effector_name: end_effector
+
+grasp_executer/planner_config_name: '[SBLkConfigDefault2]'
+grasp_analyzer/planner_config_name: '[PRMkConfigDefault]'
