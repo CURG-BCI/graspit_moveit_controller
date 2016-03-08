@@ -56,11 +56,14 @@ class GraspExecutor():
 
         moveit_commander.roscpp_initialize(sys.argv)
         self.group = moveit_commander.MoveGroupCommander(move_group_name)
+
         #self.group.set_planner_id(move_group_name + 'SBLkConfigDefault2]')
+        self.group.set_planner_id(move_group_name + 'PRMkConfigDefault')
         
         self.grasp_reachability_analyzer = GraspReachabilityAnalyzer(self.group, grasp_tran_frame_name)
-        self.grasp_reachability_analyzer.planner_id = move_group_name + rospy.get_param('grasp_executer/planner_config_name','SBLkConfigDefault2')
-        self.preshape_ratio = .5
+        #self.grasp_reachability_analyzer.planner_id = move_group_name + rospy.get_param('grasp_executer/planner_config_name','SBLkConfigDefault2')
+        self.grasp_reachability_analyzer.planner_id = move_group_name + 'PRMkConfigDefault'
+        self.preshape_ratio = 0.0
 
         if bool(rospy.get_param('reload_model_rec', 0)):
             self.reload_model_list([])
@@ -165,8 +168,10 @@ class GraspExecutor():
 
             if self.robot_running:
 
-                home_joint_values = rospy.get_param('home_joint_values',[0, 0, 0, 0, 0, 0])
+                home_joint_values = rospy.get_param('home_joint_values', [0, 0, 0, 0, 0, 0])
                 current_joint_values = self.group.get_current_joint_values()
+                rospy.loginfo("Current Joint Values: " + str(current_joint_values))
+                rospy.loginfo("home_joint_values: " + str(home_joint_values))
                 if not numpy.allclose(home_joint_values, current_joint_values, 0.2):
                     
                     print 'go home'
@@ -183,11 +188,12 @@ class GraspExecutor():
                     print("already home")
 
 
-                #This sometimes fails near the end of the trajectory because the last few
-                #steps of the trajectory are slow because our blending parameters
-                #are probably wrong. It is basically in the home position, so we
-                #don't check for success in reaching the home position because meaningful
-                #failures are rare.
+            #This sometimes fails near the end of the trajectory because the last few
+            #steps of the trajectory are slow because our blending parameters
+            #are probably wrong. It is basically in the home position, so we
+            #don't check for success in reaching the home position because meaningful
+            #failures are rare.
+            success = True
 
             #Open the hand - Leaves spread angle unchanged
             if success and self.robot_running:
@@ -228,10 +234,10 @@ class GraspExecutor():
                     success, grasp_status_msg, trajectory = self.run_pickup_trajectory(result, 0)
                     rospy.loginfo("run pickup phase 0 success:%i"%success)
 
-                #Preshape the hand before approach
-                if success:
-                    success, grasp_status_msg = self.hand_manager.move_hand_trajectory(result.trajectory_stages[1].joint_trajectory)
-                    rospy.loginfo("run pickup phase 1 success:%i"%success)
+                # #Preshape the hand before approach
+                # if success:
+                #     success, grasp_status_msg = self.hand_manager.move_hand_trajectory(result.trajectory_stages[1].joint_trajectory)
+                #     rospy.loginfo("run pickup phase 1 success:%i"%success)
 
                 #do approach
                 if success:
@@ -254,8 +260,8 @@ class GraspExecutor():
                     grasp_joint_state = self.hand_manager.joint_trajectory_to_joint_state(result.trajectory_stages[3].joint_trajectory, 0)
                     rospy.loginfo('in close hand')
                     #import IPython
-                    success, grasp_status_msg, joint_angles = self.hand_manager.close_grasp(grasp_joint_state)
-                    #self.hand_manager.close_hand()
+                    #success, grasp_status_msg, joint_angles = self.hand_manager.close_grasp(grasp_joint_state)
+                    success, reason, position = self.hand_manager.close_hand()
                     rospy.loginfo("closing hand completely success:%i" % success)
 
 
@@ -272,7 +278,7 @@ class GraspExecutor():
                         success, grasp_status_msg, trajectory_result = self.run_pickup_trajectory(result, 4)
                         rospy.loginfo("run pickup phase 4 success:%i" % success)
                         if success:
-                            rospy.logerr('GraspExecutor::process_grasp_msg::not lift up the object')
+                            rospy.logerr('GraspExecutor::process_grasp_msg::lifted up the object')
                         else:
                             grasp_status = graspit_msgs.msg.GraspStatus.UNREACHABLE
                             grasp_status_msg = "Couldn't lift object"
