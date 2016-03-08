@@ -121,8 +121,8 @@ def WaitForHand( whichmanip, timeout=5.0 ):
       time.sleep( waittime )
       success, reason, positions = GetHandPose( whichmanip )
       rospy.loginfo( '  hand pose: %s' % ( array( positions ) ) )
-      if sum( abs( lastpos - positions ) ) < 0.01:
-          rospy.loginfo( 'break' )
+      if sum( abs( lastpos - positions ) ) < 0.001:
+          rospy.loginfo( 'Breaking Wait For Hand: Desired: ' + str(positions) + " Current: " + str(lastpos) )
           break
     return success, reason, positions
 

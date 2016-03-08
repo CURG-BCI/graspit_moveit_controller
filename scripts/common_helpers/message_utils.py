@@ -111,7 +111,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # 'manipulator' is the name for the root move group in the mico arm
     moveit_positions_from_graspit_positions = {'StaubliArm': barrett_positions_from_graspit_positions,
                                                'manipulator': mico_positions_from_graspit_positions}
-    move_group_name = rospy.get_param('/arm_name','StaubliArm')
+    move_group_name = rospy.get_param('/arm_name', 'StaubliArm')
     moveit_positions_from_graspit_positions_fcn = moveit_positions_from_graspit_positions[move_group_name]
 
     moveit_grasp = moveit_msgs.msg.Grasp()
@@ -173,14 +173,14 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # GripperTranslation pre_grasp_approach
     #
     approach_dir = geometry_msgs.msg.Vector3Stamped()
-    # Set default approach dir to the jaco approach dir.
+
     x = rospy.get_param('approach_dir_x', 0)
     y = rospy.get_param('approach_dir_y', 0)
-    z = rospy.get_param('approach_dir_z', -1)
-    approach_dir.vector = geometry_msgs.msg.Vector3(x,y,z)
+    z = rospy.get_param('approach_dir_z', 1)
+    approach_dir.vector = geometry_msgs.msg.Vector3(x, y, z)
     approach_dir.header.frame_id = grasp_tran_frame_name
     moveit_grasp.pre_grasp_approach.direction = get_approach_dir_in_ee_coords(move_group_commander, listener, approach_dir)
-    # #Convert the grasp message to a transform
+    #Convert the grasp message to a transform
     grasp_tran = pm.toMatrix(pm.fromMsg(graspit_grasp_msg.final_grasp_pose))
 
 
@@ -250,8 +250,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string end_effector
     #
-    ee_name = rospy.get_param('end_effector_name', 'end_effector')
-    pickup_goal.end_effector = ee_name #planning_group.get_end_effector_link()
+    pickup_goal.end_effector = rospy.get_param('end_effector_name', 'end_effector')
 
     # # a list of possible grasps to be used. At least one grasp must be filled in
     #
@@ -279,7 +278,18 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string[] attached_object_touch_links
     #
-    pickup_goal.attached_object_touch_links = []
+    pickup_goal.attached_object_touch_links = ['barrett_mount_link', 'approach_tran', 'staubli_rx60l_link7',
+                                               'wam/bhand/bhand_palm_link',
+                                               'wrist_load_cell',
+                                                'wam/bhand/finger_1/dist_link',
+                                                'wam/bhand/finger_1/med_link',
+                                                'wam/bhand/finger_1/prox_link',
+                                                'wam/bhand/finger_2/dist_link',
+                                                'wam/bhand/finger_2/med_link',
+                                                'wam/bhand/finger_2/prox_link',
+                                                'wam/bhand/finger_3/dist_link',
+                                                'wam/bhand/finger_3/med_link',
+                                                'wam/bhand/finger_3/prox_link']
 
     # # Optionally notify the pick action that it should approach the object further,
     # # as much as possible (this minimizing the distance to the object before the grasp)
@@ -305,7 +315,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string[] allowed_touch_objects
     #
-    pickup_goal.allowed_touch_objects = []
+    #pickup_goal.allowed_touch_objects = ['all']
 
     # # The maximum amount of time the motion planner is allowed to plan for
     #
@@ -333,5 +343,5 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #                      for name, val in zip(joint_names, joint_values)]
 
     #pickup_goal.path_constraints.joint_constraints = joint_constraints
-    
+
     return pickup_goal

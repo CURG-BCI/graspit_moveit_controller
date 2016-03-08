@@ -7,7 +7,7 @@ import rospy
 import moveit_commander
 
 import geometry_msgs.msg
-from moveit_trajectory_planner.srv import *
+from trajectory_planner_msgs.srv import *
 from std_srvs.srv import Empty
 
 from world_manager_helpers.extended_planning_scene_interface import ExtendedPlanningSceneInterface
@@ -21,7 +21,11 @@ import moveit_msgs
 import moveit_msgs.srv
 from moveit_msgs.msg import PlanningSceneComponents
 import actionlib
-import moveit_trajectory_planner.msg
+import trajectory_planner_msgs.msg
+
+import actionlib
+import graspit_msgs.msg
+
 
 class WorldManager:
 
@@ -61,8 +65,8 @@ class WorldManager:
         self.update_planning_scene_from_moveit()
         self.force_use_moveit = rospy.get_param("use_moveit", 1)
 
-        self._run_recognition_as = actionlib.SimpleActionServer("recognize_objections_action",
-                                                                moveit_trajectory_planner.msg.RunObjectRecognitionAction,
+        self._run_recognition_as = actionlib.SimpleActionServer("recognize_objects_action",
+                                                                graspit_msgs.msg.RunObjectRecognitionAction,
                                                                 execute_cb=self._run_recognition_as_cb,
                                                                 auto_start=False)
         self._run_recognition_as.start()
@@ -86,9 +90,10 @@ class WorldManager:
             rospy.loginfo("body name cache:%s"%(', '.join(self.body_name_cache)))
             return True
         except Exception as e:
-            if self.force_use_moveit:
-                rospy.logerror("Failed to find service /get_planning_scene %s and force use moveit enabled"%(e))
-                rospy.shutdown()
+
+            raise e
+            rospy.logerror("Failed to find service /get_planning_scene %s and force use moveit enabled"%(e))
+            rospy.shutdown()
             rospy.logwarn("Failed to find service /get_planning_scene %s"%(e))
             return False
             
@@ -126,19 +131,23 @@ class WorldManager:
         return []
 
     def _run_recognition_as_cb(self, goal):
+        rospy.loginfo("Received Run Recognition Goal")
+
+        self.remove_all_objects_from_planner()
         self.model_manager.refresh()
 
         #self.remove_object_publisher.publish('ALL') #commented lines for graspit
         #self.publish_table_models()
-        self.remove_all_objects_from_planner()
+
         self.add_all_objects_to_planner()
         #need to return [] for empty response.
-        _result = moveit_trajectory_planner.msg.RunObjectRecognitionResult()
+        _result = trajectory_planner_msgs.msg.RunObjectRecognitionResult()
         for model in self.model_manager.model_list:
             model_name = model.model_name
             object_name = model.object_name
             object_pose = model.get_world_pose()
             object_info = graspit_msgs.msg.ObjectInfo(object_name, model_name, object_pose)
+            rospy.loginfo("Object Info: " + str(object_info))
             _result.object_info.append(object_info)
 
         self._run_recognition_as.set_succeeded(_result)
@@ -216,9 +225,9 @@ class WorldManager:
         table_x = rospy.get_param('/table_x', 1.45)
         table_y = rospy.get_param('/table_y', .74)
         table_z = rospy.get_param('/table_z', .05)
-        table_world_x_offset = rospy.get_param('/table_world_x_offset',-.05)
-        table_world_y_offset = rospy.get_param('/table_world_y_offset',-.05)
-        table_world_z_offset = rospy.get_param('/table_world_z_offset',-.0525)
+        table_world_x_offset = rospy.get_param('/table_world_x_offset', -.05)
+        table_world_y_offset = rospy.get_param('/table_world_y_offset', -.05)
+        table_world_z_offset = rospy.get_param('/table_world_z_offset', -.0525)
         box_pose.pose.position.x = table_world_x_offset
         box_pose.pose.position.y = table_world_y_offset
         box_pose.pose.position.z = table_world_z_offset
@@ -232,7 +241,7 @@ class WorldManager:
         rospy.loginfo("table added")
 
 
-    def add_base(self):
+    def add_mico_base(self):
         
         time.sleep(1)
         rospy.wait_for_service('moveit_trajectory_planner/add_box')
@@ -243,9 +252,9 @@ class WorldManager:
         base_x = rospy.get_param('/base_x', 0.2)
         base_y = rospy.get_param('/base_y', 0.15)
         base_z = rospy.get_param('/base_z', 0.01)
-        base_robot_x_offset = rospy.get_param('/base_robot_x_offset',0)
-        base_robot_y_offset = rospy.get_param('/base_robot_y_offset',0)
-        base_robot_z_offset = rospy.get_param('/base_robot_z_offset',-0.02)
+        base_robot_x_offset = rospy.get_param('/base_robot_x_offset', 0)
+        base_robot_y_offset = rospy.get_param('/base_robot_y_offset', 0)
+        base_robot_z_offset = rospy.get_param('/base_robot_z_offset', -0.02)
         box_pose.pose.position.x = base_robot_x_offset
         box_pose.pose.position.y = base_robot_y_offset
         box_pose.pose.position.z = base_robot_z_offset
@@ -262,7 +271,7 @@ class WorldManager:
 
         back_wall_pose = geometry_msgs.msg.PoseStamped()
         back_wall_pose.header.frame_id = '/staubli_rx60l_link1'
-        wall_dimensions =  [0.92, 1.22, 0.05]
+        wall_dimensions = [0.92, 1.22, 0.05]
         back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': 0.35, 'y': -0.09, 'z': -0.22})
         back_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.7128395185,
                                                                           'y': 0.0414512120285,
@@ -276,9 +285,9 @@ class WorldManager:
                                                                   'z': -0.09})
         
         left_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.482199130451,
-                                                                      'y': 0.516804171535,
-                                                                      'z': 0.487346836672,
-                                                                      'w': 0.512728493124})
+                                                                          'y': 0.516804171535,
+                                                                          'z': 0.487346836672,
+                                                                          'w': 0.512728493124})
         
         right_wall_pose = geometry_msgs.msg.PoseStamped()
         right_wall_pose.header.frame_id = '/staubli_rx60l_link1'
@@ -298,8 +307,8 @@ class WorldManager:
 
     def add_obstacles(self):
         self.add_table()
-        #self.add_walls()
-        #self.add_base()
+        self.add_walls()
+        #self.add_mico_base()
         
 if __name__ == '__main__':
 
@@ -308,6 +317,7 @@ if __name__ == '__main__':
 
         world_manager = WorldManager()
         world_manager.add_obstacles()
+
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():
             world_manager.model_manager.rebroadcast_object_tfs()

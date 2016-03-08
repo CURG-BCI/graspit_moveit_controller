@@ -6,31 +6,6 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs message_generation
 
 
 
-## Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   LocationInfo.srv
-   BoxInfo.srv
-   MeshInfo.srv
-   ObjectName.srv
-
- )
-
-add_action_files(DIRECTORY action FILES RunObjectRecognition.action CheckGraspReachability.action)
- 
-## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
-   geometry_msgs
-   trajectory_msgs
-   moveit_msgs
-   geometry_msgs
-   graspit_msgs
-   model_rec2
-   actionlib_msgs
- )
-
 catkin_package(
   CATKIN_DEPENDS actionlib
 )

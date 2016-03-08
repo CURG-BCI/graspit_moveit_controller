@@ -19,7 +19,8 @@ class GraspReachabilityAnalyzer():
         self.pick_plan_client = actionlib.SimpleActionClient('/pickup', moveit_msgs.msg.PickupAction)
         self.move_group = move_group
         #self.move_group.set_workspace([-1.25, -.5, -.4, .25, .5, 1.6])
-        self.planner_id = 'SBLkConfigDefault'
+        #self.planner_id = 'SBLkConfigDefault'
+        self.planner_id = 'KPIECEkConfigDefault'
         self.grasp_approach_tran_frame = grasp_approach_tran_frame
         self.grasp_dict = {}
         self.listener = tf.TransformListener()

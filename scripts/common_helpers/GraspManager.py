@@ -116,6 +116,7 @@ class GraspManager(object):
 
     def move_hand_trajectory(self, joint_trajectory_msg):
 
+        rospy.loginfo("move_hand_trajectory: " + str(joint_trajectory_msg))
         for i in xrange(len(joint_trajectory_msg.points)):
             joint_state_msg = self.joint_trajectory_to_joint_state(joint_trajectory_msg, i)
             if not self.move_hand_msg(joint_state_msg):

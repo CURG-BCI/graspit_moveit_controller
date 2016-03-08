@@ -44,8 +44,8 @@ class ModelManager(object):
     
     def get_world_pose(self):
         self.broadcast_tf()
-        self.listener.waitForTransform("/world", self.object_name, rospy.Time(0),rospy.Duration(10))            
-        return pm.toMsg(pm.fromTf(self.listener.lookupTransform("/world", self.object_name, rospy.Time(0))))
+        self.listener.waitForTransform("/camera_rgb_optical_frame", self.object_name, rospy.Time(0),rospy.Duration(10))
+        return pm.toMsg(pm.fromTf(self.listener.lookupTransform("/camera_rgb_optical_frame", self.object_name, rospy.Time(0))))
 
     def __getstate__(self):
         state = {}
@@ -90,8 +90,8 @@ class ModelRecManager(object):
         resp = find_objects_srv()
         self.model_list = list()
         for i in range(len(resp.object_name)):
-            rospy.logerr(self.__class__.__name__ + '::refresh:: added object - ' + resp.object_name[i] + 'pose :'
-                         + str(resp.object_pose[i]))
+            rospy.loginfo(self.__class__.__name__ + '::refresh:: added object - ' + resp.object_name[i] + '\npose :'
+                            + str(resp.object_pose[i]))
             self.model_list.append(ModelManager(resp.object_name[i],
                                                 resp.pointcloud[i],
                                                 resp.object_pose[i]))
@@ -100,8 +100,6 @@ class ModelRecManager(object):
         for model in self.model_list:
             model.model_name = model.model_name
             model.point_cloud_data.header.frame_id = '/' + model.object_name
-
-
 
     def publish_target_pointcloud(self):
         self.model_list.sort(key=ModelManager.get_dist)

@@ -66,5 +66,5 @@ approach_dir_z: 1
 
 end_effector_name: BarrettHand
 
-grasp_executer/planner_config_name: '[SBLkConfigDefault]'
+grasp_executer/planner_config_name: '[PRMkConfigDefault]'
 grasp_analyzer/planner_config_name: '[PRMkConfigDefault]'

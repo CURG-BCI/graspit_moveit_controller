@@ -24,15 +24,15 @@ class ExtendedPlanningSceneInterface(moveit_commander.PlanningSceneInterface):
         An adding function that scales mm models to m automatically, by assuming
         that if any dimension is over 5 meters it should do so. 
         """
-        scale = [1,1,1]
-        collision_object = self._PlanningSceneInterface__make_mesh(name, pose, filename)
-        for point in collision_object.meshes[0].vertices:
-            if (abs(point.x) > 5 or abs(point.y) > 5 or abs(point.z) > 5):
-                scale = [.001, .001, .001]
-                break
-        rospy.loginfo(self.__class__.__name__ + '::add_mesh_autoscaled::' +
-                     'Sent mesh name: %s filename %s'%(name, filename))
-        self.__scale_mesh(collision_object, scale)
-        self._pub_co.publish(collision_object)
+        # scale = [1,1,1]
+        # collision_object = self._PlanningSceneInterface__make_mesh(name, pose, filename)
+        # for point in collision_object.meshes[0].vertices:
+        #     if (abs(point.x) > 5 or abs(point.y) > 5 or abs(point.z) > 5):
+        #         scale = [.001, .001, .001]
+        #         break
+        # rospy.loginfo(self.__class__.__name__ + '::add_mesh_autoscaled::' +
+        #              'Sent mesh name: %s filename %s'%(name, filename))
+        # self.__scale_mesh(collision_object, scale)
+        # self._pub_co.publish(collision_object)
 
 
