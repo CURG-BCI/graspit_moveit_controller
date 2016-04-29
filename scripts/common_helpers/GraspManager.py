@@ -36,7 +36,7 @@ class GraspManager(object):
                 default_hand_preshape_subspace = barrett_default_hand_preshape_subspace
                 default_hand_joint_order = barrett_default_hand_joint_order
             else:
-                rospy.loginfo("Grasp Manager using Jaco Arm")
+                rospy.loginfo("Grasp Manager using not Staubli Arm")
 
             self.hand_closing_subspace = self.get_sanitized_dict('/hand_closing_subspace', default_hand_closing_subspace)
             self.hand_closed_angle = rospy.get_param('/hand_closed_angle', default_hand_closed_angle)

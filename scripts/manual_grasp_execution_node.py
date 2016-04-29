@@ -5,7 +5,7 @@ import rospy
 
 if __name__ == '__main__':
 
-    rospy.init_node('graspit_message_robot_server')
+    rospy.init_node('graspit_message_robot_serve2r')
 
     use_robot_hw = rospy.get_param('use_robot_hw', False)
     move_group_name = rospy.get_param('/arm_name', 'StaubliArm')

@@ -57,7 +57,7 @@ def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, listener, gras
     :param move_group_commander: A move_group command from which to get the end effector link.
     :type move_group_commander: moveit_commander.MoveGroupCommander
     :param listener: A transformer for looking up the transformation
-    :type tf.TransformListener 
+    :type tf.TransformListener
     :param graspit_grasp_msg: A graspit grasp message
     :type graspit_grasp_msg: graspit_msgs.msg.Grasp
 
@@ -76,7 +76,13 @@ def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, listener, gras
 
     graspit_grasp_msg_final_grasp_tran_matrix = tf_conversions.toMatrix(tf_conversions.fromMsg(graspit_grasp_msg.final_grasp_pose))
     approach_tran_to_end_effector_tran_matrix = tf.TransformerROS().fromTranslationRotation(at_to_ee_tran, at_to_ee_rot)
+    if move_group_commander.get_end_effector_link() == 'l_wrist_roll_link':
+        rospy.logerr('This is a PR2\'s left arm so we have to rotate things.')
+        pr2_is_weird_mat = tf.TransformerROS().fromTranslationRotation([0,0,0], tf.transformations.quaternion_from_euler(0,math.pi/2,0))
+    else:
+        pr2_is_weird_mat = tf.TransformerROS().fromTranslationRotation([0,0,0], [0,0,0])
     actual_ee_pose_matrix = np.dot( graspit_grasp_msg_final_grasp_tran_matrix, approach_tran_to_end_effector_tran_matrix)
+    actual_ee_pose_matrix = np.dot(actual_ee_pose_matrix, pr2_is_weird_mat)
     actual_ee_pose = tf_conversions.toMsg(tf_conversions.fromMatrix(actual_ee_pose_matrix))
     rospy.loginfo("actual_ee_pose: " + str(actual_ee_pose))
     return actual_ee_pose
@@ -89,7 +95,7 @@ def get_approach_dir_in_ee_coords(move_group_commander, listener, approach_dir_s
     :type approach_dir_stamped: geometry_msgs.msg.Vector3Stamped
     :rtype geometry_msgs.msg.Vector3Stamped
     """
-    try:        
+    try:
         listener.waitForTransform(approach_dir_stamped.header.frame_id, move_group_commander.get_end_effector_link(),
                                      rospy.Time(), timeout=rospy.Duration(2))
         listener.lookupTransform(approach_dir_stamped.header.frame_id, move_group_commander.get_end_effector_link(),rospy.Time())
@@ -110,7 +116,10 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     """
     # 'manipulator' is the name for the root move group in the mico arm
     moveit_positions_from_graspit_positions = {'StaubliArm': barrett_positions_from_graspit_positions,
-                                               'manipulator': mico_positions_from_graspit_positions}
+                                               'manipulator': mico_positions_from_graspit_positions,
+                                               'left_arm': lambda x: (['l_gripper_joint'], [x[0]]),
+                                               'right_arm': lambda x: (['r_gripper_joint'], [x[0]])
+                                               }
     move_group_name = rospy.get_param('/arm_name', 'StaubliArm')
     moveit_positions_from_graspit_positions_fcn = moveit_positions_from_graspit_positions[move_group_name]
 
@@ -323,7 +332,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     pickup_goal.planning_options.replan_delay = 10.0
 
     ## Constraints
-    
+
     # joint_tolerance = rospy.get_param('joint_path_tolerance',math.pi)
     # rospy.loginfo('joint tolerance constraint in planner %f'%(joint_tolerance))
     # joint_names = planning_group.get_joints()
@@ -333,5 +342,5 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #                      for name, val in zip(joint_names, joint_values)]
 
     #pickup_goal.path_constraints.joint_constraints = joint_constraints
-    
+
     return pickup_goal

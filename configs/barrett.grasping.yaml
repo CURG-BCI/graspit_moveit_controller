@@ -68,3 +68,5 @@ end_effector_name: BarrettHand
 
 grasp_executer/planner_config_name: '[SBLkConfigDefault]'
 grasp_analyzer/planner_config_name: '[PRMkConfigDefault]'
+trajectory_action_name: '/setFollowTrajectory'
+hand_manager: 'grasp_execution_helpers.barret_manager'

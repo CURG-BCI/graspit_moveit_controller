@@ -42,3 +42,5 @@ end_effector_name: end_effector
 
 grasp_executer/planner_config_name: '[SBLkConfigDefault2]'
 grasp_analyzer/planner_config_name: '[PRMkConfigDefault]'
+trajectory_action_name: '/mico_arm_driver/controller/follow_joint_trajectory'
+hand_manager: 'grasp_execution_helpers.jaco_manager'

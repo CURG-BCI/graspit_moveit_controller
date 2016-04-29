@@ -2,6 +2,7 @@
 import roslib
 import roslib.packages
 import rospy
+from collections import defaultdict
 
 pkg_path = roslib.packages.get_pkg_dir('object_models') + '/'
 
@@ -26,9 +27,9 @@ large_shaving_gel_file_name = get_path('object_models', 'gillette_shaving_gel.pl
 coke_file_name = get_path('object_models', 'coke_can.iv')
 odwalla_file_name = get_path('object_models', 'odwalla_bottle.iv')
 
-all_file_name = get_path('object_models', 'all_convex.stl')
-garnier_file_name = get_path('object_models', 'garnier_shampoo_bottle_convex.stl')
-gillette_file_name = get_path('object_models', 'gillette_shaving_gel_convex.stl')
+all_file_name = get_path('object_models', 'all.stl')
+garnier_file_name = get_path('object_models', 'garnier_shampoo_bottle.stl')
+gillette_file_name = get_path('object_models', 'gilllette_shaving_gel.stl')
 milk_carton_file_name = get_path('object_models', 'milk_carton.ply')
 
 
@@ -42,8 +43,9 @@ snapple_file_name = get_path('object_models','snapple_in_meters.iv')
 library_cup_file_name = get_path('object_models','library_cup_in_meters.iv')
 krylon_spray_file_name = get_path('object_models','krylon_spray_in_meters.iv')
 
-
-file_name_dict = dict()
+# TODO read from rosparam
+# file_name_dict = defaultdict(lambda x: get_path('object_models', x + '.stl'))
+file_name_dict = {}
 
 file_name_dict['garnier_shampoo_bottle'] = garnier_file_name
 file_name_dict['all'] = all_file_name
