@@ -65,4 +65,8 @@ class Lift(ExecutionStage):
     def run(self, grasp_msg, pick_plan):
         self._success, self._status_msg, trajectory_result = self.robot_interface.run_pickup_trajectory(pick_plan, pickup_phase=4)
 
+class Home(ExecutionStage):
+
+    def run(self, grasp_msg, pick_plan):
+        self._success = self.robot_interface.home_arm()
 

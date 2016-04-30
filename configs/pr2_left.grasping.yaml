@@ -26,3 +26,6 @@ grasp_analyzer/planner_config_name: '[PRMkConfigDefault]'
 trajectory_action_name: '/l_arm_controller/follow_joint_trajectory'
 hand_manager: 'grasp_execution_helpers.pr2_manager'
 gripper_action_name: '/l_gripper_controller/gripper_action'
+home_arm_pose_name: 'home_left'
+
+execution_stages: ['PreshapeHand', 'MoveToPreGraspPosition', 'PreshapeHand', 'Approach', 'CloseHand', 'Lift']

@@ -91,7 +91,7 @@ class RobotInterface():
 
         self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 20))
         self.group.set_start_state_to_current_state()
-        self.group.set_named_target("home")
+        self.group.set_named_target(rospy.get_param('home_arm_pose_name', 'home'))
 
         plan = self.group.plan()
 
