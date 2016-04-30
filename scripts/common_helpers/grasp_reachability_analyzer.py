@@ -32,7 +32,7 @@ class GraspReachabilityAnalyzer():
         #ipdb.set_trace()
         #return self.pose_reachability_checker(graspit_grasp_msg.final_grasp_pose, graspit_grasp_msg.object_name)
 
-        moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,                                                                       
+        moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,
                                                                        self.move_group,
                                                                        self.listener,
                                                                        self.grasp_approach_tran_frame)
@@ -52,7 +52,8 @@ class GraspReachabilityAnalyzer():
 
         pickup_goal = message_utils.build_pickup_goal(moveit_grasp_msg=moveit_grasp_msg,
                                                       object_name=graspit_grasp_msg.object_name,
-                                                      planning_group=self.move_group)
+                                                      planning_group=self.move_group,
+                                                      plan_only=True)
         # if not self.has_msg:
         #     self.has_msg = True
         #     rospy.loginfo("Entering IPython")

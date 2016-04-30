@@ -13,7 +13,7 @@ import graspit_msgs.msg
 from grasp_execution_helpers import (execution_pipeline, robot_interface as robot_interface_lib)
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 
-import common_helpers.GraspManager
+from common_helpers import GraspManager
 
 class GraspExecutionNode():
 
@@ -40,7 +40,7 @@ class GraspExecutionNode():
 
         display_trajectory_publisher = rospy.Publisher(self.trajectory_display_topic, moveit_msgs.msg.DisplayTrajectory)
 
-        hand_manager = common_helpers.GraspManager.GraspManager(importlib.import_module(rospy.get_param('hand_manager')), self.move_group_name)
+        hand_manager = GraspManager.GraspManager(importlib.import_module(rospy.get_param('hand_manager')), self.move_group_name)
 
         trajectory_action_client = actionlib.SimpleActionClient(self.trajectory_action_client_topic,
                                                                 control_msgs.msg.FollowJointTrajectoryAction)
@@ -95,7 +95,8 @@ class GraspExecutionNode():
             return status, status_msg
 
         #Execute Plan on actual robot
-        if self.use_robot_hw and success:
+        if self.use_robot_hw and True:
+            self.robot_interface.hand_manager.open_hand()
             success, status_msg = self.execution_pipeline.run(grasp_msg, pick_plan)
 
         return status, status_msg

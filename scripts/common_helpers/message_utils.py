@@ -107,7 +107,7 @@ def get_approach_dir_in_ee_coords(move_group_commander, listener, approach_dir_s
     return approach_dir_transformed
 
 
-def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, listener,  grasp_tran_frame_name='approach_tran'):
+def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, listener,  grasp_tran_frame_name='approach_tran', pregrasp_joint_angles=None, grasp_joint_angles=None):
     """
     :param graspit_grasp_msg: A graspit grasp message
     :type graspit_grasp_msg: graspit_msgs.msg.Grasp
@@ -144,8 +144,9 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # trajectory_msgs/JointTrajectory pre_grasp_posture
     #
     pre_grasp_goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    spread_pregrasp_dof = (graspit_grasp_msg.pre_grasp_dof[0], 0, 0, 0)
-    pre_grasp_joint_names, pre_grasp_goal_point.positions = moveit_positions_from_graspit_positions_fcn(spread_pregrasp_dof)
+    if not pregrasp_joint_angles:
+        pregrasp_joint_angles = graspit_grasp_msg.pre_grasp_dof
+    pre_grasp_joint_names, pre_grasp_goal_point.positions = moveit_positions_from_graspit_positions_fcn(pregrasp_joint_angles)
     moveit_grasp.pre_grasp_posture.points.append(pre_grasp_goal_point)
     moveit_grasp.pre_grasp_posture.joint_names = pre_grasp_joint_names
 
@@ -155,7 +156,9 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # trajectory_msgs/JointTrajectory grasp_posture
     #
     goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    joint_names, goal_point.positions = moveit_positions_from_graspit_positions_fcn(graspit_grasp_msg.pre_grasp_dof)
+    if not grasp_joint_angles:
+        grasp_joint_angles = graspit_grasp_msg.final_grasp_dof
+    joint_names, goal_point.positions = moveit_positions_from_graspit_positions_fcn(grasp_joint_angles)
     moveit_grasp.grasp_posture.joint_names = joint_names
     moveit_grasp.grasp_posture.points.append(goal_point)
 
@@ -234,7 +237,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     return moveit_grasp
 
 
-def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
+def build_pickup_goal(moveit_grasp_msg, object_name, planning_group, plan_only=False):
     """
     :type planning_group: moveit_commander.MoveGroupCommander
     """
@@ -326,7 +329,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # PlanningOptions planning_options
     #
-    pickup_goal.planning_options.plan_only = True
+    pickup_goal.planning_options.plan_only = plan_only
     pickup_goal.planning_options.replan = False
     pickup_goal.planning_options.look_around = False
     pickup_goal.planning_options.replan_delay = 10.0
