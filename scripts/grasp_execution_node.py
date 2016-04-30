@@ -74,7 +74,7 @@ class GraspExecutionNode():
         status_msg = "grasp_succeeded"
 
         # #Home Arm
-        success = self.robot_interface.home_arm()
+        """success = self.robot_interface.home_arm()
         if not success:
             grasp_status_msg = "Failed to Home the Arm"
             status = graspit_msgs.msg.GraspStatus.ROBOTERROR
@@ -88,7 +88,7 @@ class GraspExecutionNode():
             status = graspit_msgs.msg.GraspStatus.ROBOTERROR
             rospy.logerr(grasp_status_msg)
             return status, status_msg
-
+        """
         #Generate Pick Plan
         success, pick_plan = self.robot_interface.generate_pick_plan(grasp_msg)
         if not success:

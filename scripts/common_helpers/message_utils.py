@@ -75,8 +75,19 @@ def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, listener, gras
 
 
     graspit_grasp_msg_final_grasp_tran_matrix = tf_conversions.toMatrix(tf_conversions.fromMsg(graspit_grasp_msg.final_grasp_pose))
+
+    move_group_name = rospy.get_param('/arm_name', '')
+    if move_group_name == "StaubliArm":
+        r, p, y = tf_conversions.transformations.euler_from_quaternion(at_to_ee_rot)
+        y += math.pi
+        y =  y % (math.pi*2)
+        at_to_ee_rot = tf_conversions.transformations.quaternion_from_euler(r,p,y)
+    else:
+        rospy.loginfo("Please ensure hand is not rotated 180 deg for %s" % move_group_name)
+
     approach_tran_to_end_effector_tran_matrix = tf.TransformerROS().fromTranslationRotation(at_to_ee_tran, at_to_ee_rot)
     actual_ee_pose_matrix = np.dot( graspit_grasp_msg_final_grasp_tran_matrix, approach_tran_to_end_effector_tran_matrix)
+    #import IPython; IPython.embed()
     actual_ee_pose = tf_conversions.toMsg(tf_conversions.fromMatrix(actual_ee_pose_matrix))
     rospy.loginfo("actual_ee_pose: " + str(actual_ee_pose))
     return actual_ee_pose

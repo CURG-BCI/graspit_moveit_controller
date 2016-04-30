@@ -73,17 +73,17 @@ class GraspExecutionPipeline():
         self.stages = []
 
         #Shape Competion Pipeline
+        #self.stages.append(MoveToPreGraspPosition(robot_interface))
+        #self.stages.append(PreshapeHand(robot_interface))
+        #self.stages.append(Approach(robot_interface))
+        #self.stages.append(CloseHand(robot_interface))
+        #self.stages.append(Lift(robot_interface))
+
+        #Visio-Tactile Pipeline:
         self.stages.append(MoveToPreGraspPosition(robot_interface))
         self.stages.append(PreshapeHand(robot_interface))
         self.stages.append(Approach(robot_interface))
         self.stages.append(CloseHand(robot_interface))
-        self.stages.append(Lift(robot_interface))
-
-        #Visio-Tactile Pipeline:
-        # self.stages.append(MoveToPreGraspPosition(robot_interface))
-        # self.stages.append(PreshapeHand(robot_interface))
-        # self.stages.append(Approach(robot_interface))
-        # self.stages.append(CloseHand(robot_interface))
 
 
     def run(self, grasp_msg, pick_plan):
