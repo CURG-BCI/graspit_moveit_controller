@@ -4,6 +4,8 @@
     <arg name="executer_planning_time" default="20"/>
     <arg name="analyzer_planning_time" default="5"/>
 
+    <param name="use_robot_hw" value="true" />
+
     <rosparam command="load" file="$(find moveit_trajectory_planner)/configs/$(arg hand_name).grasping.yaml"/>
     <rosparam command="load" file="$(find moveit_trajectory_planner)/configs/$(arg hand_name).workspace.yaml"/>
 

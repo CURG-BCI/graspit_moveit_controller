@@ -45,7 +45,7 @@ def move_hand_percentage(percentage):
     """
     jnts = get_barrett_joints()
     move_hand(array([jnts[0] * percentage, jnts[1] * percentage, jnts[2] * percentage, jnts[3]]))
-    
+
 def get_barrett_joints():
     """@brief - Get the current position of the hand.
 
@@ -53,7 +53,7 @@ def get_barrett_joints():
     """
     msg = rospy.wait_for_message("/bhd/handstate", pr_msgs.msg.BHState, 5)
     return msg.positions
-                           
+
 def stop_barrett():
     """@brief - Set desired hand position to current hand position, stopping the hand
 
@@ -80,7 +80,7 @@ def open_barrett(open_aperture = 0):
     try:
         msg = rospy.wait_for_message("/bhd/handstate", pr_msgs.msg.BHState, 5)
         success,reason,positions =  move_hand([open_aperture,open_aperture,open_aperture,msg.positions[3]])
-        
+
     except:
         pass
     return success,reason, positions
