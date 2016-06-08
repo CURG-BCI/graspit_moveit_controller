@@ -1,7 +1,10 @@
 import rospy
 import control_msgs.msg
 import moveit_msgs.msg
+import jaco_msgs.srv
 
+import numpy as np
+import math
 
 class RobotInterface():
 
@@ -89,12 +92,79 @@ class RobotInterface():
 
     def home_arm(self):
 
-        self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 20))
-        self.group.set_start_state_to_current_state()
-        self.group.set_named_target("home")
+        def get_plan():
+            success = True
+            self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 20))
+            self.group.set_start_state_to_current_state()
+            self.group.set_named_target("home")
+            plan = self.group.plan()
 
-        plan = self.group.plan()
+            if len(plan.joint_trajectory.points) == 0:
+                rospy.logerr("Failed to plan path home.")
+                success = False
 
-        success = self.group.execute(plan)
+            return success, plan
+
+        def is_already_at_goal(plan):
+            current_joint_values = self.group.get_current_joint_values()
+            final_joint_values = plan.joint_trajectory.points[-1].positions
+
+            rospy.loginfo("current_joint_values: " + str(current_joint_values))
+            rospy.loginfo("final_joint_values: " + str(final_joint_values))
+
+            already_home = True
+            threshold = 0.05
+            for i, (current, final) in enumerate(zip(current_joint_values, final_joint_values)):
+                difference = abs(current-final) % (math.pi)
+                difference2 = abs(difference - (math.pi))
+                if difference2 < difference:
+                    difference = difference2
+                rospy.loginfo("joint_value " + str(i) + " difference: " + str(difference))
+                if difference > threshold:
+                    already_home = False
+                    break
+
+            return already_home
+
+        def is_near_goal(plan):
+            current_joint_values = self.group.get_current_joint_values()
+            final_joint_values = plan.joint_trajectory.points[-1].positions
+
+            rospy.loginfo("current_joint_values: " + str(current_joint_values))
+            rospy.loginfo("final_joint_values: " + str(final_joint_values))
+
+            near_home = True
+            threshold = 0.5 
+            for i, (current, final) in enumerate(zip(current_joint_values, final_joint_values)):
+                if i > 4:
+                    break
+                difference = abs(current-final) % (math.pi)
+                difference2 = abs(difference - (math.pi))
+                if difference2 < difference:
+                    difference = difference2
+                rospy.loginfo("joint_value " + str(i) + " difference: " + str(difference))
+                if difference > threshold:
+                    near_home = False
+                    break
+
+            return near_home            
+
+
+        success, plan = get_plan()
+
+        if not success:
+            return success
+        else:
+            if is_already_at_goal(plan):
+                rospy.loginfo("Arm is already home, no need to home it.")
+            elif is_near_goal(plan):
+                rospy.loginfo("Arm is close to home, no need to plan path.")
+                gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', jaco_msgs.srv.HomeArm)
+                gohome()
+            else:
+                current_joint_values = self.group.get_current_joint_values()
+                rospy.loginfo("Arm is not home, so homing it")
+                #success = self.group.execute(plan)
+                rospy.loginfo("Arm homed with success: " + str(success))
 
         return success

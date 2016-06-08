@@ -7,7 +7,7 @@ import rospy
 import moveit_commander
 
 import geometry_msgs.msg
-from trajectory_planner_msgs.srv import *
+from graspit_msgs.srv import *
 from std_srvs.srv import Empty
 
 from world_manager_helpers.extended_planning_scene_interface import ExtendedPlanningSceneInterface
@@ -21,11 +21,9 @@ import moveit_msgs
 import moveit_msgs.srv
 from moveit_msgs.msg import PlanningSceneComponents
 import actionlib
-import trajectory_planner_msgs.msg
-
-import actionlib
 import graspit_msgs.msg
 
+from moveit_trajectory_planner.srv import *
 
 class WorldManager:
 
@@ -90,10 +88,9 @@ class WorldManager:
             rospy.loginfo("body name cache:%s"%(', '.join(self.body_name_cache)))
             return True
         except Exception as e:
-
-            raise e
-            rospy.logerror("Failed to find service /get_planning_scene %s and force use moveit enabled"%(e))
-            rospy.shutdown()
+            if self.force_use_moveit:
+                rospy.logerror("Failed to find service /get_planning_scene %s and force use moveit enabled"%(e))
+                rospy.shutdown()
             rospy.logwarn("Failed to find service /get_planning_scene %s"%(e))
             return False
             
@@ -131,23 +128,19 @@ class WorldManager:
         return []
 
     def _run_recognition_as_cb(self, goal):
-        rospy.loginfo("Received Run Recognition Goal")
-
-        self.remove_all_objects_from_planner()
         self.model_manager.refresh()
 
         #self.remove_object_publisher.publish('ALL') #commented lines for graspit
         #self.publish_table_models()
-
+        self.remove_all_objects_from_planner()
         self.add_all_objects_to_planner()
         #need to return [] for empty response.
-        _result = trajectory_planner_msgs.msg.RunObjectRecognitionResult()
+        _result = graspit_msgs.msg.RunObjectRecognitionResult()
         for model in self.model_manager.model_list:
             model_name = model.model_name
             object_name = model.object_name
             object_pose = model.get_world_pose()
             object_info = graspit_msgs.msg.ObjectInfo(object_name, model_name, object_pose)
-            rospy.loginfo("Object Info: " + str(object_info))
             _result.object_info.append(object_info)
 
         self._run_recognition_as.set_succeeded(_result)
@@ -172,7 +165,6 @@ class WorldManager:
     def remove_all_objects_from_planner(self):
         """
         @brief - Clears all models from moveit enivornment (from name cache)
-
         FIXME - Add additional obstacles for camera post and computers around robot
         and some way of annotating that they shouldn't be removed.
         """
@@ -214,8 +206,6 @@ class WorldManager:
                 rospy.logwarn('File doesn\'t exist - object %s, filename %s'%(model.object_name, filename))
 
 
-            self.body_name_cache.append(model.model_name)
-
     def add_table(self):
         
         time.sleep(1)
@@ -243,7 +233,7 @@ class WorldManager:
         rospy.loginfo("table added")
 
 
-    def add_mico_base(self):
+    def add_base(self):
         
         time.sleep(1)
         rospy.wait_for_service('moveit_trajectory_planner/add_box')
@@ -254,9 +244,9 @@ class WorldManager:
         base_x = rospy.get_param('/base_x', 0.2)
         base_y = rospy.get_param('/base_y', 0.15)
         base_z = rospy.get_param('/base_z', 0.01)
-        base_robot_x_offset = rospy.get_param('/base_robot_x_offset', 0)
-        base_robot_y_offset = rospy.get_param('/base_robot_y_offset', 0)
-        base_robot_z_offset = rospy.get_param('/base_robot_z_offset', -0.02)
+        base_robot_x_offset = rospy.get_param('/base_robot_x_offset',0)
+        base_robot_y_offset = rospy.get_param('/base_robot_y_offset',0)
+        base_robot_z_offset = rospy.get_param('/base_robot_z_offset',-0.02)
         box_pose.pose.position.x = base_robot_x_offset
         box_pose.pose.position.y = base_robot_y_offset
         box_pose.pose.position.z = base_robot_z_offset
@@ -273,7 +263,7 @@ class WorldManager:
 
         back_wall_pose = geometry_msgs.msg.PoseStamped()
         back_wall_pose.header.frame_id = '/staubli_rx60l_link1'
-        wall_dimensions = [0.92, 1.22, 0.05]
+        wall_dimensions =  [0.92, 1.22, 0.05]
         back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': 0.35, 'y': -0.09, 'z': -0.22})
         back_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.7128395185,
                                                                           'y': 0.0414512120285,
@@ -287,9 +277,9 @@ class WorldManager:
                                                                   'z': -0.09})
         
         left_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.482199130451,
-                                                                          'y': 0.516804171535,
-                                                                          'z': 0.487346836672,
-                                                                          'w': 0.512728493124})
+                                                                      'y': 0.516804171535,
+                                                                      'z': 0.487346836672,
+                                                                      'w': 0.512728493124})
         
         right_wall_pose = geometry_msgs.msg.PoseStamped()
         right_wall_pose.header.frame_id = '/staubli_rx60l_link1'
@@ -309,8 +299,8 @@ class WorldManager:
 
     def add_obstacles(self):
         self.add_table()
-        self.add_walls()
-        #self.add_mico_base()
+        #self.add_walls()
+        #self.add_base()
         
 if __name__ == '__main__':
 
@@ -319,7 +309,6 @@ if __name__ == '__main__':
 
         world_manager = WorldManager()
         world_manager.add_obstacles()
-
         loop = rospy.Rate(10)
         while not rospy.is_shutdown():
             world_manager.model_manager.rebroadcast_object_tfs()

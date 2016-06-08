@@ -4,8 +4,9 @@ import rospy
 import roslib
 
 import graspit_msgs.msg
-import trajectory_planner_msgs.srv
-import trajectory_planner_msgs.msg
+
+import graspit_msgs.srv
+
 import graspit_msgs.srv
 from grasp_analyzer_helpers.demonstration_pose_analyzer import DemonstrationPoseAnalyzer
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
@@ -38,7 +39,7 @@ class GraspAnalyzerNode(object):
         """
 
         self.analyze_grasp_service = rospy.Service(analyze_grasp_topic,
-                                                   trajectory_planner_msgs.srv.LocationInfo,
+                                                   graspit_msgs.srv.LocationInfo,
                                                    self.analyze_grasp_reachability)
 
         self.analyze_pose_service = rospy.Service(demo_pose_topic,
@@ -46,7 +47,7 @@ class GraspAnalyzerNode(object):
                                                   self.analyze_demonstration_pose)
 
         self._analyze_grasp_as = actionlib.SimpleActionServer("analyze_grasp_action",
-                                                        trajectory_planner_msgs.msg.CheckGraspReachabilityAction,
+                                                        graspit_msgs.msg.CheckGraspReachabilityAction,
                                                         execute_cb=self.analyze_grasp_reachability_cb,
                                                         auto_start=False)
         self._analyze_grasp_as.start()
@@ -87,7 +88,7 @@ class GraspAnalyzerNode(object):
 
         self.demonstration_pose_analyzer.train_model(grasp_msg, success)
 
-        response = trajectory_planner_msgs.srv.LocationInfoResponse(success)
+        response = graspit_msgs.srv.LocationInfoResponse(success)
 
         rospy.loginfo(self.__class__.__name__ + " finished analyze grasp request: " + str(response))
         return response
@@ -99,7 +100,7 @@ class GraspAnalyzerNode(object):
         @return: Whether the grasp is expected to succeed
         @rtype: bool
         """
-        _result = trajectory_planner_msgs.msg.CheckGraspReachabilityResult()
+        _result = graspit_msgs.msg.CheckGraspReachabilityResult()
 
         #rospy.loginfo(self.__class__.__name__ + " received analyze grasp request: " + str(goal))
 
@@ -113,8 +114,6 @@ class GraspAnalyzerNode(object):
         rospy.loginfo(self.__class__.__name__ + " finished analyze grasp request: " + str(_result))
         self._analyze_grasp_as.set_succeeded(_result)
         return _result
-
-
 
 def main():
     try:

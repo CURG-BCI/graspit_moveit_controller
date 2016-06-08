@@ -19,14 +19,14 @@ import numpy
 def move_hand(positions, blocking=True):
     client = actionlib.SimpleActionClient('/mico_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
     angles = numpy.zeros([3,1])
-    angles[0] = positions[0]*180/math.pi*6400/60
-    angles[1] = positions[1]*180/math.pi*6400/60
+    angles[0] = (.001+positions[0])*180/math.pi*6400/60
+    angles[1] = (.001+positions[1])*180/math.pi*6400/60
 
     goal = jaco_msgs.msg.SetFingersPositionGoal()
 
     if len(positions) <= 4:
-        goal.fingers.finger1 = angles[0]
-        goal.fingers.finger2 = angles[1]
+        goal.fingers.finger1 = angles[0][0]
+        goal.fingers.finger2 = angles[1][0]
         goal.fingers.finger3 = 0.0
     else:
         return False, "Wrong joint number", positions
@@ -36,7 +36,7 @@ def move_hand(positions, blocking=True):
         reason = 'failed to connect to action server'
         return success, reason, positions
     rospy.loginfo("Connected to Finger server")
-
+    print "In move_hand goal:" + str(goal)
     client.send_goal(goal)
 
     try:
@@ -70,6 +70,7 @@ def move_hand_percentage(percentage):
        @param percentage - target relative positions.
     """
     jnts=get_mico_joints()
+    print "In move_hand_percentange jnts=" + str(jnts)
     return move_hand(array([jnts[0] * percentage, jnts[1] * percentage, 0]))
 
 

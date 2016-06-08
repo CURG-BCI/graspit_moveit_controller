@@ -10,7 +10,7 @@ import actionlib
 import moveit_commander
 
 import graspit_msgs.msg
-from grasp_execution_helpers import (barrett_manager, jaco_manager, execution_stages, robot_interface2)
+from grasp_execution_helpers import (barrett_manager, jaco_manager, execution_stages, robot_interface)
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 
 import common_helpers.GraspManager
@@ -30,8 +30,6 @@ class GraspExecutionNode():
         self.reachability_planner_id = self.move_group_name + rospy.get_param('grasp_executer/planner_config_name',
                                                                               'SBLkConfigDefault2')
 
-        self.trajectory_action_client_topic = rospy.get_param('trajectory_action_client_topic', '/setFollowTrajectory')
-
         if not manual_mode:
             self.grasp_listener = rospy.Subscriber(self.grasp_listener_topic,
                                                    graspit_msgs.msg.Grasp,
@@ -41,25 +39,25 @@ class GraspExecutionNode():
         display_trajectory_publisher = rospy.Publisher(self.trajectory_display_topic, moveit_msgs.msg.DisplayTrajectory)
 
         if self.move_group_name == 'StaubliArm':
+            self.trajectory_action_client = actionlib.SimpleActionClient('/setFollowTrajectory', control_msgs.msg.FollowJointTrajectoryAction)
             hand_manager = common_helpers.GraspManager.GraspManager(barrett_manager, self.move_group_name)
         else:
+            self.trajectory_action_client = actionlib.SimpleActionClient('/mico_arm_driver/controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
             hand_manager = common_helpers.GraspManager.GraspManager(jaco_manager, self.move_group_name)
-
-        trajectory_action_client = actionlib.SimpleActionClient(self.trajectory_action_client_topic,
-                                                                control_msgs.msg.FollowJointTrajectoryAction)
 
         moveit_commander.roscpp_initialize(sys.argv)
         group = moveit_commander.MoveGroupCommander(self.move_group_name)
-        
+
         grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, self.grasp_approach_tran_frame)
         grasp_reachability_analyzer.planner_id = self.reachability_planner_id
 
-        self.robot_interface = robot_interface2.RobotInterface(trajectory_action_client=trajectory_action_client,
+        self.robot_interface = robot_interface.RobotInterface(trajectory_action_client=self.trajectory_action_client,
                                                                display_trajectory_publisher=display_trajectory_publisher,
                                                                hand_manager=hand_manager,
                                                                group=group,
                                                                grasp_reachability_analyzer=grasp_reachability_analyzer)
 
+        self.pre_planning_pipeline = execution_stages.PrePlanningPipeline(self.robot_interface)
         self.execution_pipeline = execution_stages.GraspExecutionPipeline(self.robot_interface)
 
         self.last_grasp_time = 0
@@ -72,34 +70,24 @@ class GraspExecutionNode():
 
         status = graspit_msgs.msg.GraspStatus.SUCCESS
         status_msg = "grasp_succeeded"
+        success = True
 
-        # #Home Arm
-        success = self.robot_interface.home_arm()
-        if not success:
-            grasp_status_msg = "Failed to Home the Arm"
-            status = graspit_msgs.msg.GraspStatus.ROBOTERROR
-            rospy.logerr(grasp_status_msg)
-            return status, status_msg
+        #Pre Planning Moves, normally home arm and open hand
+        if self.use_robot_hw and success:
+            success, status_msg = self.pre_planning_pipeline.run(grasp_msg, pick_plan=None)
 
-        #Open Hand
-        success = self.robot_interface.hand_manager.open_hand()
-        if not success:
-            grasp_status_msg = "Failed to Home the Arm"
-            status = graspit_msgs.msg.GraspStatus.ROBOTERROR
-            rospy.logerr(grasp_status_msg)
-            return status, status_msg
-
-        #Generate Pick Plan
-        success, pick_plan = self.robot_interface.generate_pick_plan(grasp_msg)
-        if not success:
-            grasp_status_msg = "MoveIt Failed to plan pick"
-            status = graspit_msgs.msg.GraspStatus.ROBOTERROR
-            rospy.logerr(grasp_status_msg)
-            return status, status_msg
+        if success:
+            #Generate Pick Plan
+            success, pick_plan = self.robot_interface.generate_pick_plan(grasp_msg)
+            if not success:
+                grasp_status_msg = "MoveIt Failed to plan pick"
+                status = graspit_msgs.msg.GraspStatus.ROBOTERROR
+                rospy.logerr(grasp_status_msg)
+                return status, status_msg
 
         #Execute Plan on actual robot
         if self.use_robot_hw and success:
-            success, status_msg = self.execution_pipeline.run(grasp_msg, pick_plan)
+            success, status_msg = self.execution_pipeline.run(grasp_msg, pick_plan=pick_plan)
 
         return status, status_msg
 

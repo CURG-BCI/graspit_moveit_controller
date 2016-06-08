@@ -52,7 +52,7 @@ def mico_positions_from_graspit_positions(positions):
 
 
 def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, listener, graspit_grasp_msg,
-                                            grasp_frame = '/approach_tran'):
+                                            grasp_frame='/approach_tran'):
     """
     :param move_group_commander: A move_group command from which to get the end effector link.
     :type move_group_commander: moveit_commander.MoveGroupCommander
@@ -177,6 +177,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     x = rospy.get_param('approach_dir_x', 0)
     y = rospy.get_param('approach_dir_y', 0)
     z = rospy.get_param('approach_dir_z', 1)
+
     approach_dir.vector = geometry_msgs.msg.Vector3(x, y, z)
     approach_dir.header.frame_id = grasp_tran_frame_name
     moveit_grasp.pre_grasp_approach.direction = get_approach_dir_in_ee_coords(move_group_commander, listener, approach_dir)
@@ -278,18 +279,18 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string[] attached_object_touch_links
     #
-    pickup_goal.attached_object_touch_links = ['barrett_mount_link', 'approach_tran', 'staubli_rx60l_link7',
-                                               'wam/bhand/bhand_palm_link',
-                                               'wrist_load_cell',
-                                                'wam/bhand/finger_1/dist_link',
-                                                'wam/bhand/finger_1/med_link',
-                                                'wam/bhand/finger_1/prox_link',
-                                                'wam/bhand/finger_2/dist_link',
-                                                'wam/bhand/finger_2/med_link',
-                                                'wam/bhand/finger_2/prox_link',
-                                                'wam/bhand/finger_3/dist_link',
-                                                'wam/bhand/finger_3/med_link',
-                                                'wam/bhand/finger_3/prox_link']
+    # pickup_goal.attached_object_touch_links = ['barrett_mount_link', 'approach_tran', 'staubli_rx60l_link7',
+    #                                            'wam/bhand/bhand_palm_link',
+    #                                            'wrist_load_cell',
+    #                                             'wam/bhand/finger_1/dist_link',
+    #                                             'wam/bhand/finger_1/med_link',
+    #                                             'wam/bhand/finger_1/prox_link',
+    #                                             'wam/bhand/finger_2/dist_link',
+    #                                             'wam/bhand/finger_2/med_link',
+    #                                             'wam/bhand/finger_2/prox_link',
+    #                                             'wam/bhand/finger_3/dist_link',
+    #                                             'wam/bhand/finger_3/med_link',
+    #                                             'wam/bhand/finger_3/prox_link']
 
     # # Optionally notify the pick action that it should approach the object further,
     # # as much as possible (this minimizing the distance to the object before the grasp)
