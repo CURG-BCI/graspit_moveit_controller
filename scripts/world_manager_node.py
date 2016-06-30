@@ -262,44 +262,42 @@ class WorldManager:
     def add_walls(self):
 
         back_wall_pose = geometry_msgs.msg.PoseStamped()
-        back_wall_pose.header.frame_id = '/staubli_rx60l_link1'
-        wall_dimensions =  [0.92, 1.22, 0.05]
-        back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': 0.35, 'y': -0.09, 'z': -0.22})
-        back_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.7128395185,
-                                                                          'y': 0.0414512120285,
-                                                                          'z': 0.699774446448,
-                                                                          'w': 0.0213855555098})
-        left_wall_pose = geometry_msgs.msg.PoseStamped()
-        left_wall_pose.header.frame_id = '/staubli_rx60l_link1'
-        left_wall_dimensions =  [0.92, 1.22, 0.05]
-        left_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': -0.56,
-                                                                  'y': -0.91,
-                                                                  'z': -0.09})
-        
-        left_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.482199130451,
-                                                                      'y': 0.516804171535,
-                                                                      'z': 0.487346836672,
-                                                                      'w': 0.512728493124})
-        
-        right_wall_pose = geometry_msgs.msg.PoseStamped()
-        right_wall_pose.header.frame_id = '/staubli_rx60l_link1'
-        right_wall_dimensions =  [0.92, 1.22, 0.05]
-        right_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': -0.6,
-                                                                   'y': 0.68,
-                                                                   'z': -0.31})
-        
-        right_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': -0.50728105048,
-                                                                           'y': 0.487102614313,
-                                                                           'z': 0.482034934632,
-                                                                           'w': 0.522531626553})
-        self.scene.add_box("left_wall", left_wall_pose, wall_dimensions)
-        self.scene.add_box("right_wall", right_wall_pose, wall_dimensions)
+        back_wall_pose.header.frame_id = '/world'
+        wall_dimensions =  [1.45, .05, .5]
+        back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': .35, 'y': 0.2, 'z': 0.28})
+        back_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
+                                                                          'y': 0,
+                                                                          'z': 0,
+                                                                          'w': 0})
+                
         self.scene.add_box("back_wall", back_wall_pose, wall_dimensions)
 
+    def add_bin(self):
+
+        back_bin_pose = geometry_msgs.msg.PoseStamped()
+        back_bin_pose.header.frame_id = '/world'
+        back_bin_dimensions =  [0.5, .01, .2]
+        back_bin_pose.pose.position = geometry_msgs.msg.Point(**{'x': .62, 'y': -0.29, 'z': 0.16})
+        back_bin_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
+                                                                          'y': 0,
+                                                                          'z': 0,
+                                                                          'w': 0})
+        right_bin_pose = geometry_msgs.msg.PoseStamped()
+        right_bin_pose.header.frame_id = '/world'
+        right_bin_dimensions =  [0.01, .25, .2]
+        right_bin_pose.pose.position = geometry_msgs.msg.Point(**{'x': .36, 'y': -0.415, 'z': 0.16})
+        right_bin_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
+                                                                          'y': 0,
+                                                                          'z': 0,
+                                                                          'w': 0})
+                
+        self.scene.add_box("back_bin_wall", back_bin_pose, back_bin_dimensions)
+        self.scene.add_box("right_bin_wall", right_bin_pose, right_bin_dimensions)
 
     def add_obstacles(self):
         self.add_table()
-        #self.add_walls()
+        self.add_walls()
+        #self.add_bin()
         #self.add_base()
         
 if __name__ == '__main__':

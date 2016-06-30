@@ -15,9 +15,12 @@ import sys
 
 import ipdb
 import numpy
+import time
+
 
 def move_hand(positions, blocking=True):
-    client = actionlib.SimpleActionClient('/mico_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
+    _client = actionlib.SimpleActionClient('/mico_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
+    time.sleep(0.1)
     angles = numpy.zeros([3,1])
     angles[0] = (.001+positions[0])*180/math.pi*6400/60
     angles[1] = (.001+positions[1])*180/math.pi*6400/60
@@ -31,23 +34,23 @@ def move_hand(positions, blocking=True):
     else:
         return False, "Wrong joint number", positions
 
-    if not client.wait_for_server():
+    if not _client.wait_for_server():
         success = False
         reason = 'failed to connect to action server'
         return success, reason, positions
     rospy.loginfo("Connected to Finger server")
     print "In move_hand goal:" + str(goal)
-    client.send_goal(goal)
+    _client.send_goal(goal)
 
     try:
-        client.wait_for_result()
+        _client.wait_for_result()
     except KeyboardInterrupt:
         rospy.loginfo("Program interrupted, pre-empting goal")
-        client.cancel_all_goals()
+        _client.cancel_all_goals()
         success = False
         reason = 'Program interrupted from keyboard'
         return success, reason, positions
-    result = client.get_result()
+    result = _client.get_result()
     positions = [result.fingers.finger1, result.fingers.finger2, result.fingers.finger3]
     success = True
     reason = None
@@ -55,15 +58,48 @@ def move_hand(positions, blocking=True):
 
 
 def close_hand():
-    fingers = [math.pi/180*60, math.pi/180*60, 0]
-    success, reason, position = move_hand(fingers)
-    return success, reason, position
-
+    i = 0
+    while (i < 3):
+        fingers = [math.pi/180*60, math.pi/180*60, 0]
+        rospy.loginfo("Before move hand")
+        success, reason, position = move_hand(fingers)
+        rospy.loginfo("After move hand")
+        time.sleep(1)
+        rospy.loginfo("Before get joints")
+        fingers = get_mico_joints()
+        rospy.loginfo("After get joints")
+        if fingers[0] > 3000:
+            return success, reason, position
+        i += 1
+    return False, reason, position
 
 def open_hand():
-    fingers = [0, 0, 0]
-    success, reason, position = move_hand(fingers)
-    return success, reason, position
+    i = 0
+    while (i < 3):
+        fingers = [0, 0, 0]
+        rospy.loginfo("Before move hand")
+        success, reason, position = move_hand(fingers)
+        rospy.loginfo("After move hand")
+        time.sleep(1)
+        rospy.loginfo("Before get joints")
+        fingers = get_mico_joints()
+        rospy.loginfo("After get joints")
+        if fingers[0] < 3000:
+            return success, reason, position
+        i += 1
+
+    return False, reason, position
+
+# def close_hand():
+#     fingers = [math.pi/180*60, math.pi/180*60, 0]
+#     success, reason, position = move_hand(fingers)
+#     return success, reason, position
+
+
+# def open_hand():
+#     fingers = [0, 0, 0]
+#     success, reason, position = move_hand(fingers)
+#     return success, reason, position
 
 def move_hand_percentage(percentage):
     """@brief - set joint angles of Mico relative to current position

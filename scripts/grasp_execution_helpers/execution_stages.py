@@ -49,7 +49,7 @@ class Approach(ExecutionStage):
 class CloseHand(ExecutionStage):
 
     def run(self, grasp_msg, pick_plan):
-        time.sleep(1.0)
+        #time.sleep(1.0)
         self._success, self._status_msg, joint_angles = self.robot_interface.hand_manager.close_hand()
         #self._success, self._status_msg = self.robot_interface.hand_manager.move_hand_trajectory(pick_plan.trajectory_stages[3].joint_trajectory)
 
@@ -76,6 +76,16 @@ class HomeArm(ExecutionStage):
             self._status_msg = "Failed to Home Arm."
 
 
+class GoToDropOff(ExecutionStage):
+
+    def run(self, grasp_msg, pick_plan):
+        self._success = self.robot_interface.go_to_dropoff()
+        if self._success:
+            self._status_msg ="Success"
+        else:
+            self._status_msg = "Failed to go to dropoff."
+
+
 class Lift(ExecutionStage):
 
     def run(self, grasp_msg, pick_plan):
@@ -87,11 +97,16 @@ class ExecutionPipeline(object):
     def __init__(self, robot_interface):
         self.stages = []
 
-    def run(self, grasp_msg, pick_plan):
+    def run(self, grasp_msg, pick_plan, execution_as):
         status_msg = "Success"
         success = True
 
         for stage in self.stages:
+            if execution_as.is_preempt_requested():
+                rospy.loginfo("Preempted")
+                execution_as.set_preempted()
+                execution_as.set_succeeded(False)
+                return False, "Preempt requested"
             rospy.loginfo("Starting Execution Stage: " + stage.__class__.__name__)
             stage.run(grasp_msg, pick_plan)
 
@@ -116,12 +131,16 @@ class GraspExecutionPipeline(ExecutionPipeline):
     def __init__(self, robot_interface):
         super(GraspExecutionPipeline, self).__init__(robot_interface)
 
+        self.is_done = False
+
         #Shape Competion Pipeline
         self.stages.append(MoveToPreGraspPosition(robot_interface))
         #self.stages.append(PreshapeHand(robot_interface))
         self.stages.append(Approach(robot_interface))
         self.stages.append(CloseHand(robot_interface))
         self.stages.append(Lift(robot_interface))
+
+        self.is_done = True
 
         #Visio-Tactile Pipeline:
         # self.stages.append(MoveToPreGraspPosition(robot_interface))
@@ -139,6 +158,17 @@ class PrePlanningPipeline(ExecutionPipeline):
         self.stages.append(OpenHand(robot_interface))
 
 
+# class AfterGraspingHomePipeline(ExecutionPipeline):
+#     def __init__(self, robot_interface):
+#         super(AfterGraspingHomePipeline, self).__init__(robot_interface)
 
+#         self.stages.append(OpenHand(robot_interface))
+#         self.stages.append(Lift(robot_interface))
+        
 
+# class AfterGraspingMoveObjectPipeline(ExecutionPipeline):
+#     def __init__(self, robot_interface):
+#         super(AfterGraspingHomePipeline, self).__init__(robot_interface)
 
+#         self.stages.append(Lift(robot_interface))
+#         self.stages.append(GoToDropOff(robot_interface))
