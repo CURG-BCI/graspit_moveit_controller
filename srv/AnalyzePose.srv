@@ -1,0 +1,4 @@
+
+graspit_msgs/Grasp grasp
+---
+float64 success_probability
