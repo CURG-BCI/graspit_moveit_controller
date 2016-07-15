@@ -11,7 +11,7 @@ import moveit_commander
 
 import graspit_msgs.msg
 import graspit_msgs.srv
-from grasp_execution_helpers import (barrett_manager, jaco_manager, execution_stages, robot_interface)
+from grasp_execution_helpers import (barrett_manager, jaco_manager, execution_stages, robot_interface, execution_pipeline)
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 
 import common_helpers.GraspManager
@@ -31,7 +31,7 @@ class GraspExecutionNode():
         self.grasp_listener_topic = rospy.get_param('grasp_listener_topic', "/graspit/grasps")
         self.move_group_name = rospy.get_param('/arm_name', 'manipulator')
         self.reachability_planner_id = self.move_group_name + rospy.get_param('grasp_executer/planner_config_name',
-                                                                              'SBLkConfigDefault2')
+                                                                              '[PRMkConfigDefault]')
 
         display_trajectory_publisher = rospy.Publisher(self.trajectory_display_topic, moveit_msgs.msg.DisplayTrajectory)
 
@@ -41,8 +41,8 @@ class GraspExecutionNode():
         moveit_commander.roscpp_initialize(sys.argv)
         group = moveit_commander.MoveGroupCommander(self.move_group_name)
 
-        grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, self.grasp_approach_tran_frame)
-        grasp_reachability_analyzer.planner_id = self.reachability_planner_id
+        planner_id = self.reachability_planner_id
+        grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, self.grasp_approach_tran_frame, planner_id)
 
         self.robot_interface = robot_interface.RobotInterface(trajectory_action_client=self.trajectory_action_client,
                                                                display_trajectory_publisher=display_trajectory_publisher,
@@ -50,8 +50,12 @@ class GraspExecutionNode():
                                                                group=group,
                                                                grasp_reachability_analyzer=grasp_reachability_analyzer)
 
-        self.pre_planning_pipeline = execution_stages.PrePlanningPipeline(self.robot_interface)
-        self.execution_pipeline = execution_stages.GraspExecutionPipeline(self.robot_interface)
+        self.execution_pipeline = execution_pipeline.GraspExecutionPipeline(self.robot_interface,
+                                                                            ['MoveToPreGraspPosition',
+                                                                             'PreshapeHand', 'Approach',
+                                                                             'CloseHand', 'Lift'])
+        self.pre_planning_pipeline = execution_pipeline.GraspExecutionPipeline(self.robot_interface,
+                                                                            ['HomeArm', 'OpenHand'])
 
         self.last_grasp_time = 0
 
@@ -83,7 +87,7 @@ class GraspExecutionNode():
         rospy.loginfo(self.__class__.__name__ + " is initialized")
 
 
-    def _grasp_execution_cb(self, grasp_goal): # NEW 6/15/16 ******
+    def _grasp_execution_cb(self, grasp_goal):
 
         rospy.loginfo("GraspExecutor::process_grasp_msg::" + str(grasp_goal))
 

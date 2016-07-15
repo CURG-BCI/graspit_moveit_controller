@@ -135,7 +135,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # trajectory_msgs/JointTrajectory pre_grasp_posture
     #
     pre_grasp_goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    spread_pregrasp_dof = (graspit_grasp_msg.pre_grasp_dof[0], 0, 0, 0)
+    spread_pregrasp_dof = (0, 0, 0, 0)
     pre_grasp_joint_names, pre_grasp_goal_point.positions = moveit_positions_from_graspit_positions_fcn(spread_pregrasp_dof)
     moveit_grasp.pre_grasp_posture.points.append(pre_grasp_goal_point)
     moveit_grasp.pre_grasp_posture.joint_names = pre_grasp_joint_names

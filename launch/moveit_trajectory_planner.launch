@@ -14,12 +14,15 @@
 
     <node name="grasp_executer" pkg="moveit_trajectory_planner" type="grasp_execution_node.py" >
     	  <param name="allowed_planning_time" value="$(arg executer_planning_time)" />
+    	  <remap from="joint_states" to="/mico_arm_driver/out/joint_state"/>
     </node>
 
     <node name="grasp_analyzer" pkg="moveit_trajectory_planner" type="grasp_analyzer_node.py" >
     	  <param name="allowed_planning_time" value="$(arg analyzer_planning_time)" />
+    	  <remap from="joint_states" to="/mico_arm_driver/out/joint_state"/>
     </node>
 
     <node name="world_manager" pkg="moveit_trajectory_planner" type="world_manager_node.py" />
+
 
 </launch>

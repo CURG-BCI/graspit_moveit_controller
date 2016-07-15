@@ -261,7 +261,6 @@ class RobotInterface():
 
     def open_hand_and_go_home(self):
         self.hand_manager.open_hand()
-        self.cartesian_translation("z", "positive")
         self.home_arm()
         return True
 

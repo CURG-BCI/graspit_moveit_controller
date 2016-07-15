@@ -1,31 +1,23 @@
 import rospy
 import execution_stages
 
-class GraspExecutionPipeline():
+
+class GraspExecutionPipeline:
 
     def __init__(self, robot_interface, stage_names):
 
         self.stages = [getattr(execution_stages, s)(robot_interface) for s in stage_names]
 
-        #Shape Competion Pipeline
-        #self.stages.append(MoveToPreGraspPosition(robot_interface))
-        #self.stages.append(PreshapeHand(robot_interface))
-        #self.stages.append(Approach(robot_interface))
-        #self.stages.append(CloseHand(robot_interface))
-        #self.stages.append(Lift(robot_interface))
-
-        #Visio-Tactile Pipeline:
-        # self.stages.append(MoveToPreGraspPosition(robot_interface))
-        # self.stages.append(PreshapeHand(robot_interface))
-        # self.stages.append(Approach(robot_interface))
-        # self.stages.append(CloseHand(robot_interface))
-
-
-    def run(self, grasp_msg, pick_plan):
+    def run(self, grasp_msg, pick_plan, execution_as):
         status_msg = "Success"
         success = True
 
         for stage in self.stages:
+            if execution_as.is_preempt_requested():
+                rospy.loginfo("Preempted")
+                execution_as.set_preempted()
+                execution_as.set_succeeded(False)
+                return False, "Preempt requested"
             rospy.loginfo("Starting Execution Stage: " + stage.__class__.__name__)
             stage.run(grasp_msg, pick_plan)
 
@@ -40,6 +32,6 @@ class GraspExecutionPipeline():
                              " with status: " +
                              str(status_msg))
 
-                break
+                return success, status_msg
 
         return success, status_msg
