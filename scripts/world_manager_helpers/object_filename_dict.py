@@ -3,8 +3,7 @@ import roslib
 import roslib.packages
 import rospy
 
-pkg_path = roslib.packages.get_pkg_dir('object_models') + '/'
-
+#pkg_path = roslib.packages.get_pkg_dir('object_models') + '/'
 
 
 def get_path(package_name, resource_name):
@@ -26,10 +25,18 @@ large_shaving_gel_file_name = get_path('object_models', 'gillette_shaving_gel.pl
 coke_file_name = get_path('object_models', 'coke_can.iv')
 odwalla_file_name = get_path('object_models', 'odwalla_bottle.iv')
 
+
+milk_carton_file_name = get_path('object_models', 'milk_carton.vtk.ply')
+
+#OLD STL MODELS
+# all_file_name = get_path('object_models', 'all_convex.stl')
+# garnier_file_name = get_path('object_models', 'garnier_shampoo_bottle_convex.stl')
+# gillette_file_name = get_path('object_models', 'gillette_shaving_gel_convex.stl')
+
+#NEW STL MODELS
 all_file_name = get_path('object_models', 'all.vtk.stl')
 garnier_file_name = get_path('object_models', 'garnier_shampoo_bottle.vtk.stl')
 gillette_file_name = get_path('object_models', 'gillette_shaving_gel.vtk.stl')
-milk_carton_file_name = get_path('object_models', 'milk_carton.vtk.ply')
 
 
 drill_custom_file_name = get_path('object_models','drill_custom_in_meters.iv')
@@ -41,6 +48,9 @@ box_file_name = get_path('object_models','box_in_meters.iv')
 snapple_file_name = get_path('object_models','snapple_in_meters.iv')
 library_cup_file_name = get_path('object_models','library_cup_in_meters.iv')
 krylon_spray_file_name = get_path('object_models','krylon_spray_in_meters.iv')
+
+frenchs_file_name = get_path('object_models', 'frenchs_classic_yellow_mustard_14oz_two.vtk.stl')
+drill_two_file_name = get_path('object_models', 'drill_custom_two.vtk.stl')
 
 file_name_dict = dict()
 
@@ -59,6 +69,9 @@ file_name_dict['snapple'] = snapple_file_name
 file_name_dict['darparock'] = rock_file_name
 file_name_dict['krylon_spray'] = krylon_spray_file_name
 file_name_dict['library_cup'] = library_cup_file_name
+
+file_name_dict['frenchs_classic_yellow_mustard_14oz_two'] = frenchs_file_name
+file_name_dict['drill_two'] = drill_two_file_name
 
 
 file_name_dict['orange_wood_block_1inx1in'] = get_path('object_models', 'orange_wood_block_1inx1in.iv')
@@ -79,7 +92,7 @@ file_name_dict['melissa_doug_farm_fresh_fruit_orange'] = get_path('object_models
 file_name_dict['black_and_decker_lithium_drill_driver.vtk'] = get_path('object_models', 'black_and_decker_lithium_drill_driver.vtk')
 file_name_dict['melissa_doug_farm_fresh_fruit_lemon'] = get_path('object_models', 'melissa_doug_farm_fresh_fruit_lemon.iv')
 file_name_dict['clorox_disinfecting_wipes_35'] = get_path('object_models', 'clorox_disinfecting_wipes_35.iv')
-file_name_dict['frenchs_classic_yellow_mustard_14oz'] = get_path('object_models', 'frenchs_classic_yellow_mustard_14oz.iv')
+# file_name_dict['frenchs_classic_yellow_mustard_14oz'] = get_path('object_models', 'frenchs_classic_yellow_mustard_14oz.iv')
 file_name_dict['large_black_spring_clamp'] = get_path('object_models', 'large_black_spring_clamp.iv')
 file_name_dict['melissa_doug_farm_fresh_fruit_strawberry'] = get_path('object_models', 'melissa_doug_farm_fresh_fruit_strawberry.iv')
 file_name_dict['block_of_wood_6in'] = get_path('object_models', 'block_of_wood_6in.iv')

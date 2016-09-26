@@ -95,7 +95,7 @@ class RobotInterface:
 
         def get_plan():
             success = True
-            self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 20))
+            self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 10))
             self.group.set_start_state_to_current_state()
             self.group.set_named_target("home")
             plan = self.group.plan()
@@ -203,58 +203,6 @@ class RobotInterface:
         success = self.group.execute(plan)
         return success
 
-    def go_to_dropoff(self):
-        def get_plan():
-
-            self.home_arm(execute=False)
-            print("Planned path home")
-
-            success = True
-            self.group.set_planner_id("KPIECEkConfigDefault")  # ("RRTConnectkConfigDefault") ("RRTkConfigDefault") ("KPIECEkConfigDefault")
-            # BKPIECEkConfigDefault   LBKPIECEkConfigDefault   PRMkConfigDefault   PRMstarkConfigDefault   RRTConnectkConfigPercise
-            # RRTstarkConfigDefault   SBLkConfigDefault2   SBLkConfigDefault   TRRTkConfigDefault
-            self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 30))
-
-            start_pose = self.group.get_current_pose(end_effector_link ="mico_end_effector")
-            end_effector = self.group.get_end_effector_link()
-
-            self.group.set_start_state_to_current_state()
-            q = start_pose.pose.orientation
-            # target = [0.045, -0.383, 0.306, round(q.x, 7), round(q.y, 7), round(q.z, 7), round(q.w, 7)]
-            target = [0.206146807397, -0.387979557224, 0.336934473666, q.x, q.y, q.z, q.w]
-            self.group.set_pose_target(target, end_effector_link ="mico_end_effector")
-            self.group.set_goal_position_tolerance(.001)
-            self.group.set_goal_orientation_tolerance(0.75)  # 200000)
-
-            import IPython
-            IPython.embed()
-
-            # constraints = self.constrain_path(start_pose, end_effector)
-            # print("\n \n GOT CONSTRAINTS \n \n")
-            # self.group.set_path_constraints(constraints)
-            # print("\n \n SET CONSTRAINTS \n \n")
-            print("\n \n ABOUT TO FIND PLAN \n \n")
-            plan = self.group.plan()
-            print("\n \n PLANNED \n \n")
-
-            if len(plan.joint_trajectory.points) == 0:
-                rospy.logerr("Failed to plan path to dropoff.")
-                success = False
-
-            return success, plan
-
-        success, plan = get_plan()
-        if not success:
-            return success, None, None
-        else:
-            # success = self.group.execute(plan)
-            # return success
-            # trajectory_message = plan.joint_trajectory
-            # success, error_msg, trajectory_result = self.run_trajectory(trajectory_message)
-            error_msg = None
-            trajectory_result = None
-            return success, error_msg, trajectory_result
-
     def open_hand_and_go_home(self):
         self.hand_manager.open_hand()
         self.home_arm()
@@ -263,30 +211,8 @@ class RobotInterface:
     def move_object(self):
         success = self.dropoff2()
         if success:
-            self.hand_manager.open_hand()
-            self.home_arm()
+            self.open_hand_and_go_home()
         return True
-
-    def constrain_path(self, start_pose, end_effector):
-        # current_orientation = self.group.get_current_pose().pose.orientation
-        # start_pose = self.group.get_current_pose()
-        current_orientation = start_pose.pose.orientation
-        constraint_msg = moveit_msgs.msg.OrientationConstraint()
-        constraint_msg.orientation = current_orientation
-        print ("Current orientation: %s" %current_orientation)
-        constraint_msg.link_name = end_effector
-        print ("End effector: %s" %constraint_msg.link_name)
-        constraint_msg.absolute_x_axis_tolerance = 0.75  # (math.pi) / 3
-        constraint_msg.absolute_y_axis_tolerance = 0.75  # (math.pi) / 3
-        constraint_msg.absolute_z_axis_tolerance = 2*math.pi  # 200000000
-        constraint_msg.weight = 0.5
-        tf_frame = self.group.get_pose_reference_frame()
-        print ("tf_frame: %s " % tf_frame)
-        constraint_msg.header = start_pose.header
-        all_constraints = self.group.get_path_constraints()
-        all_constraints.orientation_constraints = []
-        all_constraints.orientation_constraints.append(constraint_msg) 
-        return all_constraints
 
     def manual_move(self, axis, direction, server=None):
         """ axis: x = 0, y = 1, z = 2, roll = 3, pitch = 4, yaw = 5; direction: positive = 1, negative = -1 """
@@ -576,7 +502,7 @@ class RobotInterface:
             self.open_hand_and_go_home()
 
     def place_object(self, x_goal, y_goal, server=None):
-        self.manual_move(2, 1)
+        # self.manual_move(2, 1)
         pose = self.group.get_current_pose().pose
         hand_position = self.group.get_current_pose(end_effector_link="mico_end_effector").pose.position
         q0 = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
@@ -589,8 +515,8 @@ class RobotInterface:
             if not success:
                 success = self._place_object(angle, length, x_goal, y_goal, longway=True, server=server)
             if success:
-                self.manual_move(2, -1)
-                self.manual_move(2, -4/5)
+                self.manual_move(2, -14/5)
+                # self.manual_move(2, -9/5)
                 break
         return success
 
@@ -624,8 +550,8 @@ class RobotInterface:
         if longway:
             midpoint = tf.transformations.quaternion_multiply([0, 0, 1, 0], midpoint)
 
-        x1 = x_goal + (length * math.sin(yaw_goal))
-        y1 = y_goal - (length * math.cos(yaw_goal))
+        x1 = x_goal - (length * math.sin(yaw_goal))
+        y1 = y_goal + (length * math.cos(yaw_goal))
         z1 = z0 + 0.05
 
         height = 0.03
@@ -715,6 +641,119 @@ class RobotInterface:
         print "x comparison: " + str(compare_x) + "  y comparison: " + str(compare_y)
         return yaw, wrist_position, hand_position1, hypothesis, compare_x, compare_y
 
+    def go_to_dropoff(self, angle1, length1, x_goal1, y_goal1):
+        def get_plan(angle, length, x_goal, y_goal):
+
+            self.home_arm(execute=False)
+            print("Planned path home")
+
+            success = True
+            self.group.set_planner_id("KPIECEkConfigDefault")  # ("RRTConnectkConfigDefault") ("RRTkConfigDefault") ("KPIECEkConfigDefault")
+            # BKPIECEkConfigDefault   LBKPIECEkConfigDefault   PRMkConfigDefault   PRMstarkConfigDefault   RRTConnectkConfigPercise
+            # RRTstarkConfigDefault   SBLkConfigDefault2   SBLkConfigDefault   TRRTkConfigDefault
+
+            self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 10))
+            start_pose = self.group.get_current_pose()
+            end_effector = self.group.get_end_effector_link()
+            self.group.set_start_state_to_current_state()
+
+            z1 = start_pose.pose.position.z + 0.05
+            quaternion0 = start_pose.pose.orientation
+            q0 = [quaternion0.x, quaternion0.y, quaternion0.z, quaternion0.w]
+            rpy = tf.transformations.euler_from_quaternion(q0)
+            print rpy[2]
+            print("\n")
+            yaw_goal = rpy[2] + angle
+            if yaw_goal > math.pi:
+                yaw_goal -= 2 * math.pi
+            print length
+            print yaw_goal
+            print("\n\n")
+
+            x1 = x_goal + (length * math.sin(yaw_goal))
+            y1 = y_goal - (length * math.cos(yaw_goal))
+
+            q1 = tf.transformations.quaternion_from_euler(rpy[0], rpy[1], yaw_goal)
+            # target = [x1, y1, z1, q1[0], q1[1], q1[2], q1[3]]
+            # self.group.set_pose_target(target)
+            self.group.set_position_target([x1,y1,z1])
+            # self.group.set_goal_position_tolerance(.001)
+
+            # constraints = self.constrain_path(start_pose, end_effector)
+            # print("\n \n GOT CONSTRAINTS \n \n")
+            # self.group.set_path_constraints(constraints)
+            # print("\n \n SET CONSTRAINTS \n \n")
+            print("\n \n ABOUT TO FIND PLAN \n \n")
+
+            plan = self.group.plan()
+            print("\n \n PLANNED \n \n")
+
+            if len(plan.joint_trajectory.points) == 0:
+                rospy.logerr("Failed to plan path to dropoff.")
+                success = False
+
+            return success, plan
+
+        success, plan = get_plan(angle1, length1, x_goal1, y_goal1)
+        if not success:
+            return success
+        else:
+            # success = self.group.execute(plan)
+            # return success
+            # trajectory_message = plan.joint_trajectory
+            # success, error_msg, trajectory_result = self.run_trajectory(trajectory_message)
+            error_msg = None
+            trajectory_result = None
+            return success
+
+    def constrain_path(self, start_pose, end_effector):
+        # current_orientation = self.group.get_current_pose().pose.orientation
+        # start_pose = self.group.get_current_pose()
+        current_orientation = start_pose.pose.orientation
+        constraint_msg = moveit_msgs.msg.OrientationConstraint()
+        constraint_msg.orientation = current_orientation
+        print ("Current orientation: %s" % current_orientation)
+        constraint_msg.link_name = end_effector
+        print ("End effector: %s" % constraint_msg.link_name)
+        constraint_msg.absolute_x_axis_tolerance = 3/4 * math.pi  # (math.pi) / 3
+        constraint_msg.absolute_y_axis_tolerance = 3/4 * math.pi  # (math.pi) / 3
+        constraint_msg.absolute_z_axis_tolerance = 0.1  # 200000000
+        constraint_msg.weight = 0.5
+        tf_frame = self.group.get_pose_reference_frame()
+        print ("tf_frame: %s " % tf_frame)
+        constraint_msg.header = start_pose.header
+        all_constraints = self.group.get_path_constraints()
+        all_constraints.orientation_constraints = []
+        all_constraints.orientation_constraints.append(constraint_msg)
+        return all_constraints
+
+    def example_place2(self, choice):
+        a = (0.2453, -0.2417)
+        b = (0.1605, -0.4507)
+        c = (-0.1366, -0.4620)
+        d = (-0.3281, -0.2705)
+        places = [a, b, c, d]
+        location = places[choice]
+        success = self.place_object2(location[0], location[1])
+        if success:
+            self.open_hand_and_go_home()
+
+    def place_object2(self, x_goal, y_goal, server=None):
+        # self.manual_move(2, 1)
+        pose = self.group.get_current_pose().pose
+        hand_position = self.group.get_current_pose(end_effector_link="mico_end_effector").pose.position
+        q0 = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
+        yaw = tf.transformations.euler_from_quaternion(q0)[2]
+        length = abs((hand_position.x - pose.position.x) / math.sin(yaw))
+        success = False
+        for i in range(4):
+            angle = i * (math.pi / 2)
+            success = self.go_to_dropoff(angle, length, x_goal, y_goal)
+            if success:
+                # self.manual_move(2, -14 / 5)
+                # self.manual_move(2, -9/5)
+                break
+        return success
 
     #rosrun moveit_trajectory_planner manual_grasp_execution_node.py joint_states:=/mico_arm_driver/out/joint_state
 

@@ -164,9 +164,9 @@ class GraspExecutionNode():
             while (success == True) and (distance < 0.5):
                 if self._manual_movement.is_preempt_requested():
                     self._manual_movement.set_preempted()
-                    
+
                     return
-                success = self.robot_interface.cartesian_translation2(axis, direction, server=self._manual_movement)
+                success = self.robot_interface.manual_move(axis, direction, server=self._manual_movement)
                 distance += 0.05
 
         else:

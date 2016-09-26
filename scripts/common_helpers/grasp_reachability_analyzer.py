@@ -24,6 +24,7 @@ class GraspReachabilityAnalyzer():
         """
         :type graspit_grasp_msg: graspit_msgs.msg.Grasp
         """
+        # self.move_group.set_planning_time(rospy.get_param('~allowed_planning_time'))
 
         moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,                                                                       
                                                                        self.move_group,
@@ -43,7 +44,7 @@ class GraspReachabilityAnalyzer():
             pickup_goal.planner_id = self.planner_id
             self.pick_plan_client.send_goal(pickup_goal)
 
-            received_result = self.pick_plan_client.wait_for_result(rospy.Duration(rospy.get_param('~allowed_planning_time', 20)))
+            received_result = self.pick_plan_client.wait_for_result(rospy.Duration(rospy.get_param('~allowed_planning_time', 5)))
         except Exception as e:
             rospy.logerr("failed to reach pick action server with err: %s" % e.message)
 

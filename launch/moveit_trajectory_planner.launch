@@ -1,10 +1,9 @@
 
 <launch>
     <arg name="hand_name" default="barrett" />
-    <arg name="executer_planning_time" default="20"/>
-    <arg name="analyzer_planning_time" default="5"/>
+    <arg name="executer_planning_time" default="5"/>
+    <arg name="analyzer_planning_time" default="1"/>
 
-    <param name="grasp_executer/planner_config_name" value="SBLkConfigDefault2"/>
     <param name="grasp_listener_topic" value="/graspit/grasps"/>
     <param name="trajectory_display_topic" value="/move_group/display_planned_path"/>
 
