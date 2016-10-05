@@ -33,7 +33,7 @@ class WorldManager:
     def __init__(self):
         moveit_commander.roscpp_initialize(sys.argv)
 
-        self.NEW_MODEL_REC = False
+        self.NEW_MODEL_REC = True
         self.scene = ExtendedPlanningSceneInterface()
         self.robot = moveit_commander.RobotCommander()
 

@@ -12,8 +12,8 @@ import tf
 import tf.transformations
 import tf_conversions.posemath as pm
 
-# import objrec_ros_integration, objrec_ros_integration.srv
-import model_rec2, model_rec2.srv
+import objrec_ros_integration, objrec_ros_integration.srv
+# import model_rec2, model_rec2.srv
 import sensor_msgs, sensor_msgs.msg
 import graspit_msgs.srv
 
