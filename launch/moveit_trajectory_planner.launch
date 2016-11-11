@@ -1,5 +1,6 @@
 
 <launch>
+    <arg name="experiment_type" default="block" />
     <arg name="hand_name" default="barrett" />
     <arg name="executer_planning_time" default="5"/>
     <arg name="analyzer_planning_time" default="1"/>
@@ -21,7 +22,9 @@
     	  <remap from="joint_states" to="/mico_arm_driver/out/joint_state"/>
     </node>
 
-    <node name="world_manager" pkg="moveit_trajectory_planner" type="world_manager_node.py" />
+    <node name="world_manager" pkg="moveit_trajectory_planner" type="world_manager_node.py" >
+        <param name="experiment_type" value="$(arg experiment_type)" />
+    </node>
 
 
 </launch>

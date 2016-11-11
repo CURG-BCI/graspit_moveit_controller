@@ -175,32 +175,65 @@ class WorldManager:
 
         self.scene.add_box("back_wall", back_wall_pose, wall_dimensions)
 
-    def add_bin(self):
-
-        back_bin_pose = geometry_msgs.msg.PoseStamped()
-        back_bin_pose.header.frame_id = '/world'
-        back_bin_dimensions = [0.5, .01, .2]
-        back_bin_pose.pose.position = geometry_msgs.msg.Point(**{'x': .62, 'y': -0.29, 'z': 0.16})
-        back_bin_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
+    def add_bin_wall(self, w, d, h, x, y, z, wall_name):
+        time.sleep(1)
+        bin_pose = geometry_msgs.msg.PoseStamped()
+        bin_pose.header.frame_id = '/root'
+        bin_dimensions = [w, d, h]
+        bin_pose.pose.position = geometry_msgs.msg.Point(**{'x': x, 'y': y, 'z': z})
+        bin_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
                                                                          'y': 0,
                                                                          'z': 0,
                                                                          'w': 0})
-        right_bin_pose = geometry_msgs.msg.PoseStamped()
-        right_bin_pose.header.frame_id = '/world'
-        right_bin_dimensions = [0.01, .25, .2]
-        right_bin_pose.pose.position = geometry_msgs.msg.Point(**{'x': .36, 'y': -0.415, 'z': 0.16})
-        right_bin_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
-                                                                          'y': 0,
-                                                                          'z': 0,
-                                                                          'w': 0})
+        self.scene.add_box(wall_name, bin_pose, bin_dimensions)
 
-        self.scene.add_box("back_bin_wall", back_bin_pose, back_bin_dimensions)
-        self.scene.add_box("right_bin_wall", right_bin_pose, right_bin_dimensions)
+    def add_bin(self):
+
+        # back_bin_pose = geometry_msgs.msg.PoseStamped()
+        # back_bin_pose.header.frame_id = '/world'
+        # back_bin_dimensions = [0.5, .01, .2]
+        # back_bin_pose.pose.position = geometry_msgs.msg.Point(**{'x': .62, 'y': -0.29, 'z': 0.16})
+        # back_bin_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
+        #                                                                  'y': 0,
+        #                                                                  'z': 0,
+        #                                                                  'w': 0})
+        # right_bin_pose = geometry_msgs.msg.PoseStamped()
+        # right_bin_pose.header.frame_id = '/world'
+        # right_bin_dimensions = [0.01, .25, .2]
+        # right_bin_pose.pose.position = geometry_msgs.msg.Point(**{'x': .36, 'y': -0.415, 'z': 0.16})
+        # right_bin_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
+        #                                                                   'y': 0,
+        #                                                                   'z': 0,
+        #                                                                   'w': 0})
+
+        # self.scene.add_box("back_bin_wall", back_bin_pose, back_bin_dimensions)
+        # self.scene.add_box("right_bin_wall", right_bin_pose, right_bin_dimensions)
+        h = 0.085
+        z = h/2
+        l_1 = 0.537
+        l_2 = 0.254
+        thickness = 0.01
+        x = -0.1
+        y = -l_1 / 2
+
+        self.add_bin_wall(thickness, l_2, h,
+                         y, x - l_2/2, z, "left_bin_wall")
+        self.add_bin_wall(thickness, l_2, h,
+                          y + l_1, x - l_2/2, z, "right_bin_wall")
+        self.add_bin_wall(l_1, thickness, h,
+                          y + l_1/2, x - l_2 - thickness, z, "top_bin_wall")
+        self.add_bin_wall(l_1, thickness, h,
+                          y + l_1/2, x + thickness, z, "bottom_bin_wall")
+
+        self.add_bin_wall(thickness, 0.254, 0.152,
+                         y + l_1/2,  x - l_2/2, 0.076, "center_bin_wall")
 
     def add_obstacles(self):
         self.add_table()
-        self.add_walls()
-        # self.add_bin()
+        experiment_type = rospy.get_param('~experiment_type')
+        if experiment_type == "block":
+            self.add_bin()
+        # self.add_walls()
         # self.add_base()
 
 

@@ -75,10 +75,13 @@ class ModelRecManager(object):
             find_objects_srv = rospy.ServiceProxy('/recognize_objects',  model_rec2.srv.FindObjects)
 
         resp = find_objects_srv()
+        experiment_type = rospy.get_param('~experiment_type')
 
         for i in range(len(resp.object_name)):
             rospy.loginfo("Adding ModelManager for object" + str(resp.object_name[i]) )
             rospy.loginfo("Pose: " + str(resp.object_pose[i]))
+            if experiment_type == "block" and "block" not in resp.object_name[i]:
+                continue
             self.model_list.append(ModelManager(resp.object_name[i],
                                                 resp.object_pose[i], self.NEW_MODEL_REC))
         self.uniquify_object_names()
