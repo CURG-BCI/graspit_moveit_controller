@@ -28,7 +28,7 @@ class ModelManager(object):
         self.pose = pose
         self.bc = ModelRecManager.tf_broadcaster
         self.listener = ModelRecManager.tf_listener
-        self.detected_frame = "/camera_rgb_optical_frame"
+        self.detected_frame = "/kinect2_rgb_optical_frame"
 
     def broadcast_tf(self):
         tf_pose = pm.toTf(pm.fromMsg(self.pose))
@@ -61,6 +61,8 @@ class ModelRecManager(object):
         self.tf_listener = tf.TransformListener()
         self.tf_broadcaster = tf.TransformBroadcaster()
 
+        self.experiment_type = rospy.get_param('~experiment_type')
+
         ModelRecManager.tf_listener = self.tf_listener
         ModelRecManager.tf_broadcaster = self.tf_broadcaster
         self.model_name_server = rospy.Service('/get_object_info', graspit_msgs.srv.GetObjectInfo, self.get_object_info)
@@ -69,19 +71,21 @@ class ModelRecManager(object):
         #clear out old models
         self.model_list = list()
 
-        if self.NEW_MODEL_REC:
+        if self.NEW_MODEL_REC and self.experiment_type == "block":
+            find_objects_srv = rospy.ServiceProxy('/objrec_node/find_blocks', objrec_ros_integration.srv.FindObjects)
+        elif self.NEW_MODEL_REC:
             find_objects_srv = rospy.ServiceProxy('/objrec_node/find_objects', objrec_ros_integration.srv.FindObjects)
         else:
             find_objects_srv = rospy.ServiceProxy('/recognize_objects',  model_rec2.srv.FindObjects)
 
         resp = find_objects_srv()
-        experiment_type = rospy.get_param('~experiment_type')
+
 
         for i in range(len(resp.object_name)):
             rospy.loginfo("Adding ModelManager for object" + str(resp.object_name[i]) )
             rospy.loginfo("Pose: " + str(resp.object_pose[i]))
-            if experiment_type == "block" and "block" not in resp.object_name[i]:
-                continue
+            # if self.experiment_type == "block" and "block" not in resp.object_name[i]:
+            #     continue
             self.model_list.append(ModelManager(resp.object_name[i],
                                                 resp.object_pose[i], self.NEW_MODEL_REC))
         self.uniquify_object_names()
