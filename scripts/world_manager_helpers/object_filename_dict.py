@@ -84,16 +84,16 @@ file_name_dict['purple_wood_block_1inx1in'] = purple_block_file_name
 file_name_dict['red_mug'] = red_mug_file_name
 file_name_dict['spam_12oz'] = spam_file_name
 
-file_name_dict['milk_carton'] = milk_carton_file_name
-file_name_dict['odwalla_bottle'] = odwalla_file_name
-file_name_dict['darpaflashlight'] = flashlight_file_name
+# file_name_dict['milk_carton'] = milk_carton_file_name
+# file_name_dict['odwalla_bottle'] = odwalla_file_name
+# file_name_dict['darpaflashlight'] = flashlight_file_name
 
 file_name_dict['drill_custom'] = drill_custom_file_name
 file_name_dict['mug_custom'] = mug_custom_file_name
 file_name_dict['darpaphonehandset'] = darpaphonehandset_file_name
 file_name_dict['box'] = box_file_name
 file_name_dict['snapple'] = snapple_file_name
-file_name_dict['darparock'] = rock_file_name
+# file_name_dict['darparock'] = rock_file_name
 file_name_dict['krylon_spray'] = krylon_spray_file_name
 file_name_dict['library_cup'] = library_cup_file_name
 
