@@ -15,18 +15,15 @@ def get_path(package_name, resource_name):
         return resources[0]
 
 
-rock_file_name = get_path('object_models', 'darparock.iv')
-drill_file_name = get_path('object_models', 'darpadrill.iv')
-hammer_file_name = get_path('object_models', 'darpahammer.iv')
-flashlight_file_name = get_path('object_models', 'darpaflashlight.iv')
+#rock_file_name = get_path('object_models', 'darparock.iv')
+#drill_file_name = get_path('object_models', 'darpadrill.iv')
+#hammer_file_name = get_path('object_models', 'darpahammer.iv')
+#flashlight_file_name = get_path('object_models', 'darpaflashlight.iv')
+#large_shaving_gel_file_name = get_path('object_models', 'gillette_shaving_gel.ply')
+#coke_file_name = get_path('object_models', 'coke_can.iv')
+#odwalla_file_name = get_path('object_models', 'odwalla_bottle.iv')
 
-
-large_shaving_gel_file_name = get_path('object_models', 'gillette_shaving_gel.ply')
-coke_file_name = get_path('object_models', 'coke_can.iv')
-odwalla_file_name = get_path('object_models', 'odwalla_bottle.iv')
-
-
-milk_carton_file_name = get_path('object_models', 'milk_carton.vtk.ply')
+#milk_carton_file_name = get_path('object_models', 'milk_carton.vtk.ply')
 
 #OLD STL MODELS
 # all_file_name = get_path('object_models', 'all_convex.stl')
