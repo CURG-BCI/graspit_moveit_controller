@@ -37,7 +37,22 @@ milk_carton_file_name = get_path('object_models', 'milk_carton.vtk.ply')
 all_file_name = get_path('object_models', 'all.vtk.stl')
 garnier_file_name = get_path('object_models', 'garnier_shampoo_bottle.vtk.stl')
 gillette_file_name = get_path('object_models', 'gillette_shaving_gel.vtk.stl')
+soup_file_name = get_path('object_models', 'campbells_condensed_tomato_soup.vtk.stl')
+banana_file_name = get_path('object_models', 'banana.vtk.stl')
+block_file_name = get_path('object_models', 'block.vtk.stl')
+purple_block_file_name = get_path('object_models', 'purple_wood_block_1inx1in.vtk.stl')
+block_large_file_name = get_path('object_models', 'block_large.vtk.stl')
+block_large_scanned_file_name = get_path('object_models', 'block_large_scanned.vtk.stl')
+#TODO FIX ME
+block_50_file_name = get_path('object_models', 'block.vtk.stl')
+block_64_file_name = get_path('object_models', 'block.vtk.stl')
+block_76_file_name = get_path('object_models', 'block.vtk.stl')
 
+
+
+mustard_file_name = get_path('object_models', 'mustard.vtk.stl')
+red_mug_file_name = get_path('object_models', 'red_mug.vtk.stl')
+spam_file_name = get_path('object_models', 'spam_12oz.vtk.stl')
 
 drill_custom_file_name = get_path('object_models','drill_custom_in_meters.iv')
 mug_custom_file_name = get_path('object_models','mug_custom_in_meters.iv')
@@ -49,17 +64,32 @@ snapple_file_name = get_path('object_models','snapple_in_meters.iv')
 library_cup_file_name = get_path('object_models','library_cup_in_meters.iv')
 krylon_spray_file_name = get_path('object_models','krylon_spray_in_meters.iv')
 
-frenchs_file_name = get_path('object_models', 'frenchs_classic_yellow_mustard_14oz_two.vtk.stl')
 drill_two_file_name = get_path('object_models', 'drill_custom_two.vtk.stl')
 
 file_name_dict = dict()
 
 file_name_dict['garnier_shampoo_bottle'] = garnier_file_name
 file_name_dict['all'] = all_file_name
+file_name_dict['gillette_shaving_gel'] = gillette_file_name
+file_name_dict['campbells_condensed_tomato_soup'] = soup_file_name
+file_name_dict['banana'] = banana_file_name
+file_name_dict['block'] = block_file_name
+file_name_dict['block_large'] = block_large_file_name
+file_name_dict['block_large_scanned'] = block_large_scanned_file_name
+file_name_dict['block_50'] = block_50_file_name
+file_name_dict['block_64'] = block_64_file_name
+file_name_dict['block_76'] = block_76_file_name
+
+file_name_dict['mustard'] = mustard_file_name
+file_name_dict['purple_wood_block_1inx1in'] = purple_block_file_name
+
+
+file_name_dict['red_mug'] = red_mug_file_name
+file_name_dict['spam_12oz'] = spam_file_name
+
+file_name_dict['milk_carton'] = milk_carton_file_name
 file_name_dict['odwalla_bottle'] = odwalla_file_name
 file_name_dict['darpaflashlight'] = flashlight_file_name
-file_name_dict['gillette_shaving_gel'] = gillette_file_name
-file_name_dict['milk_carton'] = milk_carton_file_name
 
 file_name_dict['drill_custom'] = drill_custom_file_name
 file_name_dict['mug_custom'] = mug_custom_file_name
@@ -70,16 +100,13 @@ file_name_dict['darparock'] = rock_file_name
 file_name_dict['krylon_spray'] = krylon_spray_file_name
 file_name_dict['library_cup'] = library_cup_file_name
 
-file_name_dict['frenchs_classic_yellow_mustard_14oz_two'] = frenchs_file_name
 file_name_dict['drill_two'] = drill_two_file_name
 
 
 file_name_dict['orange_wood_block_1inx1in'] = get_path('object_models', 'orange_wood_block_1inx1in.iv')
 file_name_dict['black_and_decker_lithium_drill_driver.xml'] = get_path('object_models', 'black_and_decker_lithium_drill_driver.xml')
-file_name_dict['melissa_doug_farm_fresh_fruit_banana'] = get_path('object_models', 'melissa_doug_farm_fresh_fruit_banana.iv')
 file_name_dict['black_and_decker_lithium_drill_driver'] = get_path('object_models', 'black_and_decker_lithium_drill_driver.iv')
 file_name_dict['cheerios_14oz'] = get_path('object_models', 'cheerios_14oz.iv')
-file_name_dict['spam_12oz'] = get_path('object_models', 'spam_12oz.iv')
 file_name_dict['pringles_original'] = get_path('object_models', 'pringles_original.iv')
 file_name_dict['brine_mini_soccer_ball'] = get_path('object_models', 'brine_mini_soccer_ball.iv')
 file_name_dict['red_metal_cup_white_speckles'] = get_path('object_models', 'red_metal_cup_white_speckles.iv')
@@ -92,7 +119,6 @@ file_name_dict['melissa_doug_farm_fresh_fruit_orange'] = get_path('object_models
 file_name_dict['black_and_decker_lithium_drill_driver.vtk'] = get_path('object_models', 'black_and_decker_lithium_drill_driver.vtk')
 file_name_dict['melissa_doug_farm_fresh_fruit_lemon'] = get_path('object_models', 'melissa_doug_farm_fresh_fruit_lemon.iv')
 file_name_dict['clorox_disinfecting_wipes_35'] = get_path('object_models', 'clorox_disinfecting_wipes_35.iv')
-# file_name_dict['frenchs_classic_yellow_mustard_14oz'] = get_path('object_models', 'frenchs_classic_yellow_mustard_14oz.iv')
 file_name_dict['large_black_spring_clamp'] = get_path('object_models', 'large_black_spring_clamp.iv')
 file_name_dict['melissa_doug_farm_fresh_fruit_strawberry'] = get_path('object_models', 'melissa_doug_farm_fresh_fruit_strawberry.iv')
 file_name_dict['block_of_wood_6in'] = get_path('object_models', 'block_of_wood_6in.iv')
@@ -102,10 +128,8 @@ file_name_dict['domino_sugar_1lb'] = get_path('object_models', 'domino_sugar_1lb
 file_name_dict['cheeze-it_388g'] = get_path('object_models', 'cheeze-it_388g.iv')
 file_name_dict['melissa_doug_farm_fresh_fruit_pear'] = get_path('object_models', 'melissa_doug_farm_fresh_fruit_pear.iv')
 file_name_dict['rubbermaid_ice_guard_pitcher_blue'] = get_path('object_models', 'rubbermaid_ice_guard_pitcher_blue.iv')
-file_name_dict['purple_wood_block_1inx1in'] = get_path('object_models', 'purple_wood_block_1inx1in.iv')
 file_name_dict['soft_scrub_2lb_4oz'] = get_path('object_models', 'soft_scrub_2lb_4oz.iv')
 file_name_dict['play_go_rainbow_stakin_cups_5_green'] = get_path('object_models', 'play_go_rainbow_stakin_cups_5_green.iv')
-file_name_dict['campbells_condensed_tomato_soup'] = get_path('object_models', 'campbells_condensed_tomato_soup.iv')
 file_name_dict['melissa_doug_farm_fresh_fruit_apple'] = get_path('object_models', 'melissa_doug_farm_fresh_fruit_apple.iv')
 file_name_dict['morton_salt_shaker'] = get_path('object_models', 'morton_salt_shaker.iv')
 file_name_dict['jell-o_strawberry_gelatin_dessert'] = get_path('object_models', 'jell-o_strawberry_gelatin_dessert.iv')

@@ -5,6 +5,7 @@ import jaco_msgs.srv
 import numpy as np
 import math
 import tf
+import IPython
 
 
 class RobotInterface:
@@ -208,23 +209,98 @@ class RobotInterface:
         self.home_arm()
         return True
 
-    def move_object(self):
-        success = self.dropoff2()
-        if success:
-            self.open_hand_and_go_home()
+    def move_object(self, server=None):
+        #FOR HARDCODING A PATH THAT RAISES THE END EFFECTOR, ROTATES BASE JOINT, and LOWERS END EFFECTOR:
+
+        print("Before anything")
+
+        #This moves end effector up
+        self.group.clear_pose_targets()
+        self.waypoints_translation(-0.4, server=server)
+
+        print("First waypoints translation")
+
+        #This executes command???
+        # plan = self.group.plan()
+        # self.group.execute(plan)
+
+        print("Executed")
+
+        #Rotation
+        self.group.clear_pose_targets()
+        group_variable_values = self.group.get_current_joint_values()
+        group_variable_values[0] += 0.5
+        self.group.set_joint_value_target(group_variable_values)
+
+        print("Base rotation")
+
+        #This executes command???
+        plan = self.group.plan()
+        self.group.go()
+        # self.group.execute(plan)
+
+        print("Executed")
+
+        #This moves end efector down
+        self.group.clear_pose_targets()
+        self.waypoints_translation(0.4, server=server)
+
+        print("Second waypoints translation")
+
+        #This executes command???
+        # plan = self.group.plan()
+        # self.group.execute(plan)
+
+        print("Executed")
+
+        self.open_hand_and_go_home()
+
+        print("Open hand and go home")
+
+        #This executes command???
+        # plan = self.group.plan()
+        # self.group.execute(plan)
+
+        print("Executed")
+
         return True
 
-    def manual_move(self, axis, direction, server=None):
+        #FOR PLANNING A PATH FROM CURRENT POSITION TO SET END GOAL:
+
+        # self.group.set_start_state_to_current_state()
+        # pose = self.group.get_current_pose()
+        # pose.pose.position.x = -0.0271767654181
+        # pose.pose.position.y = -0.23098809043
+        # pose.pose.position.z = 0.199946972128
+        # pose.pose.orientation.x = 0.226220924638
+        # pose.pose.orientation.y = -0.666850427277
+        # pose.pose.orientation.z = -0.665674832609
+        # pose.pose.orientation.w = 0.247005299795
+        #
+        # self.group.set_planner_id("PRMkConfigDefault")
+        # self.group.set_pose_target(pose)
+        # plan = self.group.plan()
+        # if server and server.is_preempt_requested():
+        #     server.set_preempted()
+        #     return False
+        # success = self.group.execute(plan)
+        # # IPython.embed()
+        # print(success)
+        #
+        # self.open_hand_and_go_home()
+        # return True
+
+    def manual_move(self, axis, direction, distance=0.05, server=None):
         """ axis: x = 0, y = 1, z = 2, roll = 3, pitch = 4, yaw = 5; direction: positive = 1, negative = -1 """
 
-        value = 0.05 * direction
+        value = distance * direction
         if axis > 2:
             value = ((math.pi)/16) * direction
-        self.group.clear_pose_targets()
-        self.home_arm(execute=False)
-        if server and server.is_preempt_requested():
-            server.set_preempted()
-            return False
+        # self.group.clear_pose_targets()
+        # self.home_arm(execute=False)
+        # if server and server.is_preempt_requested():
+        #     server.set_preempted()
+        #     return False
         self.group.set_planning_time(rospy.get_param('~allowed_planning_time', 5))
         self.group.set_start_state_to_current_state()
         self.group.set_pose_reference_frame("/root")
@@ -234,6 +310,15 @@ class RobotInterface:
             server.set_preempted()
             return False
         success = self.group.execute(plan)
+        return success
+
+    def put_object_down(self, server=None):
+        success = True
+        self.cartesian_translation("z","negative", server)
+        self.hand_manager.open_hand()
+        self.cartesian_translation("z", "positive", server)
+        self.cartesian_translation("z", "positive", server)
+        self.home_arm(True)
         return success
 
     def cartesian_translation2(self, axis, direction, server=None):
@@ -264,10 +349,11 @@ class RobotInterface:
             wpose.position.z += changes[2]/nsteps
             waypoints.append(copy.deepcopy(wpose))
 
+        self.group.set_planning_time(60)
         (plan, fraction) = self.group.compute_cartesian_path(
                              waypoints,   # waypoints to follow
                              0.01,        # eef_step
-                             10)           # joint_jump
+                             0.000001)           # joint_jump
 
         prev_point = plan.joint_trajectory.points[0]
         start_time = 0
@@ -291,9 +377,245 @@ class RobotInterface:
 
         return success
 
+    def up_turn_and_down(self, server=None):
+        success_up = self.new_dropoff_up()
+        if success_up:
+            print("lifted up")
+            success_turn = self.new_dropoff_turn()
+            if success_turn:
+                print("turned")
+                self.new_dropoff_down()
+
+    def new_dropoff_up(self, server=None):
+        success = True
+        pose = self.group.get_current_pose()
+        import copy
+        waypoints = []
+        pose = self.group.get_current_pose()
+        waypoints.append(copy.deepcopy(pose.pose))
+        # print pose
+
+        z0 = pose.pose.position.z
+
+        wpose = copy.deepcopy(pose.pose)
+
+        # print quaternions
+        for i in range(5):
+            wpose.position.z += 0.016
+            wpose.position.y -= 0.02
+            waypoints.append(copy.deepcopy(wpose))
+
+        (plan, fraction) = self.group.compute_cartesian_path(
+            waypoints,  # waypoints to follow
+            0.1,  # eef_step
+            10,  # joint_jump
+            avoid_collisions=False)
+
+        prev_point = plan.joint_trajectory.points[0]
+        start_time = 0
+        # print waypoints
+        print fraction
+        for i, point in enumerate(plan.joint_trajectory.points):
+            if i == 0:
+                point.velocities = tuple([0] * len(point.positions))
+            end_time = point.time_from_start.secs + point.time_from_start.nsecs / 1000000000.0
+            point.velocities = tuple(
+                list((np.array(point.positions) - np.array(prev_point.positions)) / (end_time - start_time)))
+            start_time = end_time
+            prev_point = point
+
+        if server and server.is_preempt_requested():
+            server.set_preempted()
+            return False
+
+        if fraction != 1:
+            success = False
+        else:
+            self.group.execute(plan)
+
+        return success
+
+    def new_dropoff_turn(self, server=None):
+        success = self._new_dropoff_turn(longway=False, server=server)
+        if not success:
+            print("Need to try longway")
+            success = self._new_dropoff_turn(longway=True, server=server)
+
+    def _new_dropoff_turn(self, longway=False, server=None):
+        success = True
+
+        import copy
+        waypoints = []
+        pose = self.group.get_current_pose()
+        waypoints.append(copy.deepcopy(pose.pose))
+        # print pose
+
+        x0 = pose.pose.position.x
+        y0 = pose.pose.position.y
+        z0 = pose.pose.position.z
+
+        x1 = 0.352748511959
+        y1 = -0.21911669887
+        z1 = 0.10981918533
+        q1 = [0.495242102741, -0.504267995644, -0.486711373379, 0.513382009098]
+
+        quaternion0 = pose.pose.orientation
+        q0 = [quaternion0.x, quaternion0.y, quaternion0.z, quaternion0.w]
+
+        wpose = copy.deepcopy(pose.pose)
+
+        midpoint = tf.transformations.quaternion_slerp(q0, q1, 0.5)
+        print midpoint
+
+        if longway:
+            midpoint = tf.transformations.quaternion_multiply([0, 0, 1, 0], midpoint)
+
+        nsteps = 10
+        quaternions = [tf.transformations.quaternion_slerp(q0, midpoint, i * (1.0 / float(nsteps / 2))) for i in
+                       range(nsteps / 2)]
+        quaternions += [tf.transformations.quaternion_slerp(midpoint, q1, i * (1.0 / float(nsteps / 2))) for i in
+                        range(nsteps / 2)]
+        # print quaternions
+        for i in range(nsteps):
+            s = i * (1.0 / float(nsteps))
+            wpose.position.x = (1 - s) * x0 + s * x1
+            wpose.position.y = (1 - s) * y0 + s * y1
+
+            orientation = quaternions[i]
+            wpose.orientation.x = orientation[0]
+            wpose.orientation.y = orientation[1]
+            wpose.orientation.z = orientation[2]
+            wpose.orientation.w = orientation[3]
+
+            waypoints.append(copy.deepcopy(wpose))
+
+        (plan, fraction) = self.group.compute_cartesian_path(
+            waypoints,  # waypoints to follow
+            0.1,  # eef_step
+            10,  # joint_jump
+            avoid_collisions=False)
+
+        prev_point = plan.joint_trajectory.points[0]
+        start_time = 0
+        # print waypoints
+        print fraction
+        for i, point in enumerate(plan.joint_trajectory.points):
+            if i == 0:
+                point.velocities = tuple([0] * len(point.positions))
+            end_time = point.time_from_start.secs + point.time_from_start.nsecs / 1000000000.0
+            point.velocities = tuple(
+                list((np.array(point.positions) - np.array(prev_point.positions)) / (end_time - start_time)))
+            start_time = end_time
+            prev_point = point
+
+        if server and server.is_preempt_requested():
+            server.set_preempted()
+            return False
+
+        if fraction != 1:
+            success = False
+        else:
+            self.group.execute(plan)
+
+        return success
+
+    def new_dropoff_down(self, server=None):
+        success = True
+        pose = self.group.get_current_pose()
+        import copy
+        waypoints = []
+        pose = self.group.get_current_pose()
+        waypoints.append(copy.deepcopy(pose.pose))
+        # print pose
+
+        z0 = pose.pose.position.z
+
+        wpose = copy.deepcopy(pose.pose)
+
+        # print quaternions
+        for i in range(8):
+            wpose.position.z -= 0.02
+            waypoints.append(copy.deepcopy(wpose))
+
+        (plan, fraction) = self.group.compute_cartesian_path(
+            waypoints,  # waypoints to follow
+            0.1,  # eef_step
+            10,  # joint_jump
+            avoid_collisions=False)
+
+        prev_point = plan.joint_trajectory.points[0]
+        start_time = 0
+        # print waypoints
+        print fraction
+        for i, point in enumerate(plan.joint_trajectory.points):
+            if i == 0:
+                point.velocities = tuple([0] * len(point.positions))
+            end_time = point.time_from_start.secs + point.time_from_start.nsecs / 1000000000.0
+            point.velocities = tuple(
+                list((np.array(point.positions) - np.array(prev_point.positions)) / (end_time - start_time)))
+            start_time = end_time
+            prev_point = point
+
+        if server and server.is_preempt_requested():
+            server.set_preempted()
+            return False
+
+        if fraction != 1:
+            success = False
+        else:
+            success_executed = self.group.execute(plan)
+
+        return success_executed
+
+    def waypoints_translation(self, z_distance, server=None):
+        import copy
+        waypoints = []
+        pose = self.group.get_current_pose()
+        waypoints.append(copy.deepcopy(pose.pose))
+        # print pose
+        wpose = copy.deepcopy(pose.pose)
+        nsteps = abs(int(z_distance/0.05))
+
+        for i in range(nsteps):
+            wpose.position.z += (z_distance/nsteps)
+
+            waypoints.append(copy.deepcopy(wpose))
+
+        (plan, fraction) = self.group.compute_cartesian_path(
+            waypoints,  # waypoints to follow
+            0.1,  # eef_step
+            10,  # joint_jump
+            avoid_collisions=False)
+
+        prev_point = plan.joint_trajectory.points[0]
+        start_time = 0
+        # print waypoints
+        print fraction
+        for i, point in enumerate(plan.joint_trajectory.points):
+            if i == 0:
+                point.velocities = tuple([0] * len(point.positions))
+            end_time = point.time_from_start.secs + point.time_from_start.nsecs / 1000000000.0
+            point.velocities = tuple(
+                list((np.array(point.positions) - np.array(prev_point.positions)) / (end_time - start_time)))
+            start_time = end_time
+            prev_point = point
+
+        if server and server.is_preempt_requested():
+            server.set_preempted()
+            return False
+
+        success = True
+        # if fraction != 1:
+        #     success = False
+        # else:
+        self.group.execute(plan)
+
+        return success
+
     def dropoff2(self, server=None):
         success = self._dropoff2(longway=False, server=server)
         if not success:
+            print("Need to try longway")
             success = self._dropoff2(longway=True, server=server)
 
         return success
@@ -306,28 +628,35 @@ class RobotInterface:
         success = True
 
         frame = self.group.get_pose_reference_frame()
-        print frame
+
+        self.group.set_planner_id("RRTConnectkConfigDefault")  # ("RRTConnectkConfigDefault") ("RRTkConfigDefault") ("KPIECEkConfigDefault")
+        # BKPIECEkConfigDefault   LBKPIECEkConfigDefault   PRMkConfigDefault   PRMstarkConfigDefault   RRTConnectkConfigPercise
+        # RRTstarkConfigDefault   SBLkConfigDefault2   SBLkConfigDefault   TRRTkConfigDefault
 
         import copy
         waypoints = []
         pose = self.group.get_current_pose()
         waypoints.append(copy.deepcopy(pose.pose))
-        print pose
+        # print pose
 
         x0 = pose.pose.position.x
         y0 = pose.pose.position.y
         z0 = pose.pose.position.z
 
-        x1 = 0.0843734169772
-        y1 = -0.297149433291
-        z1 = 0.285390054635
-        q1 = [0.277958852453, -0.665224278085, -0.620185033681, 0.309169953566]
+        # x1 = 0.0843734169772
+        # y1 = -0.297149433291
+        # z1 = 0.285390054635
+        # q1 = [0.277958852453, -0.665224278085, -0.620185033681, 0.309169953566]
+        x1 = 0.352748511959
+        y1 = -0.21911669887
+        z1 = 0.10981918533
+        q1 = [0.495242102741, -0.504267995644, -0.486711373379, 0.513382009098]
 
 
         quaternion0 = pose.pose.orientation
         q0 = [quaternion0.x, quaternion0.y, quaternion0.z, quaternion0.w]
 
-        height = 0.08
+        height = 0.22
         if z0 > z1:
             height = 0.01
             a = -2*((height*(height+z0-z1))**0.5) - 2*height - z0 + z1
@@ -336,7 +665,6 @@ class RobotInterface:
             a = -2*((height*(height - z0 + z1))**0.5) - 2*height + z0 - z1
             b = 2*(((height*(height - z0 + z1))**0.5) + height - z0 + z1)
 
-        # first orient gripper and move forward (+z)
         wpose = copy.deepcopy(pose.pose)
 
         midpoint = tf.transformations.quaternion_slerp(q0, q1, 0.5)
@@ -348,7 +676,7 @@ class RobotInterface:
         nsteps = 10
         quaternions = [tf.transformations.quaternion_slerp(q0, midpoint, i*(1.0/float(nsteps/2))) for i in range(nsteps/2)]
         quaternions += [tf.transformations.quaternion_slerp(midpoint, q1, i*(1.0/float(nsteps/2))) for i in range(nsteps/2)]
-        print quaternions
+        # print quaternions
         for i in range(nsteps):
             s = i*(1.0/float(nsteps))
             wpose.position.x = (1-s)*x0 + s*x1
@@ -371,7 +699,7 @@ class RobotInterface:
 
         prev_point = plan.joint_trajectory.points[0]
         start_time = 0
-        print waypoints
+        # print waypoints
         print fraction
         for i, point in enumerate(plan.joint_trajectory.points):
             if i == 0:
@@ -389,6 +717,8 @@ class RobotInterface:
             success = False
         else:
             self.group.execute(plan)
+
+        print(success)
 
         return success
 

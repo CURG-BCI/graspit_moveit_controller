@@ -1,8 +1,8 @@
 
 <launch>
-    <arg name="experiment_type" default="block" />
+    <arg name="experiment_type" default="normal" />
     <arg name="hand_name" default="barrett" />
-    <arg name="executer_planning_time" default="5"/>
+    <arg name="executer_planning_time" default="8"/>
     <arg name="analyzer_planning_time" default="1"/>
 
     <param name="grasp_listener_topic" value="/graspit/grasps"/>

@@ -21,12 +21,13 @@ class GraspAnalyzerNode(object):
         move_group_name = rospy.get_param('/arm_name', 'manipulator')
         grasp_approach_tran_frame = rospy.get_param('approach_tran_frame', '/approach_tran')
         planner_id = move_group_name + rospy.get_param('grasp_analyzer/planner_config_name', '[PRMkConfigDefault]')
+        allowed_planning_time = rospy.get_param('~allowed_planning_time')
 
         moveit_commander.roscpp_initialize(sys.argv)
 
         group = moveit_commander.MoveGroupCommander(move_group_name)
 
-        self.grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, grasp_approach_tran_frame, planner_id)
+        self.grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, grasp_approach_tran_frame, planner_id, allowed_planning_time)
 
         self._analyze_grasp_as = actionlib.SimpleActionServer(analyze_grasp_topic,
                                                               graspit_msgs.msg.CheckGraspReachabilityAction,

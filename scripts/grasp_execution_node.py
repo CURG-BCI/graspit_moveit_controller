@@ -8,10 +8,11 @@ import moveit_msgs.msg
 import control_msgs.msg
 import actionlib
 import moveit_commander
+import IPython
 
 import graspit_msgs.msg
 import graspit_msgs.srv
-from grasp_execution_helpers import (barrett_manager, jaco_manager, execution_stages, robot_interface, execution_pipeline)
+from grasp_execution_helpers import (barrett_manager, jaco_manager, execution_stages, robot_interface, execution_pipeline, mico_interface)
 from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 
 import common_helpers.GraspManager
@@ -32,6 +33,7 @@ class GraspExecutionNode():
         self.move_group_name = rospy.get_param('/arm_name', 'manipulator')
         self.reachability_planner_id = self.move_group_name + rospy.get_param('grasp_executer/planner_config_name',
                                                                               '[PRMkConfigDefault]')
+        self.allowed_planning_time = rospy.get_param('~allowed_planning_time')
 
         display_trajectory_publisher = rospy.Publisher(self.trajectory_display_topic, moveit_msgs.msg.DisplayTrajectory)
 
@@ -42,9 +44,10 @@ class GraspExecutionNode():
         group = moveit_commander.MoveGroupCommander(self.move_group_name)
 
         planner_id = self.reachability_planner_id
-        grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, self.grasp_approach_tran_frame, planner_id)
+        grasp_reachability_analyzer = GraspReachabilityAnalyzer(group, self.grasp_approach_tran_frame, planner_id, self.allowed_planning_time)
 
-        self.robot_interface = robot_interface.RobotInterface(trajectory_action_client=self.trajectory_action_client,
+        #robot_interface or mico_interface
+        self.robot_interface = mico_interface.RobotInterface(trajectory_action_client=self.trajectory_action_client,
                                                                display_trajectory_publisher=display_trajectory_publisher,
                                                                hand_manager=hand_manager,
                                                                group=group,
@@ -54,10 +57,13 @@ class GraspExecutionNode():
                                                                             ['MoveToPreGraspPosition',
                                                                              'PreshapeHand', 'Approach',
                                                                              'CloseHand', 'Lift'])
+
         self.pre_planning_pipeline = execution_pipeline.GraspExecutionPipeline(self.robot_interface,
                                                                             ['HomeArm', 'OpenHand'])
 
         self.last_grasp_time = 0
+
+        # IPython.embed()
 
         if not manual_mode:
             self._grasp_execution = actionlib.SimpleActionServer("grasp_execution_action",
@@ -99,6 +105,8 @@ class GraspExecutionNode():
         if self.use_robot_hw and success:
             success, status_msg = self.pre_planning_pipeline.run(grasp_goal.grasp, None, self._grasp_execution)
 
+        # IPython.embed()
+
         if success:
             #Generate Pick Plan
             success, pick_plan = self.robot_interface.generate_pick_plan(grasp_goal.grasp)
@@ -111,16 +119,19 @@ class GraspExecutionNode():
         if self.use_robot_hw and success:
             success, status_msg = self.execution_pipeline.run(grasp_goal.grasp, pick_plan, self._grasp_execution)
 
-        # if success:
-        #     self.robot_interface.move_object()
+        if success:
+            rospy.loginfo("Successfully executed grasp")
+            success = self.robot_interface.move_object()
+        else:
+            rospy.logerr("Picking up object failed")
 
-
-        #need to return [] for empty response.
         print success
         print status_msg
         _result = graspit_msgs.msg.GraspExecutionResult()
         _result.success = success
         self._grasp_execution.set_succeeded(_result)
+
+        # need to return [] for empty response.
         return []
 
 
@@ -131,6 +142,8 @@ class GraspExecutionNode():
 
         if action_type == "moveobject":
             completed = self.robot_interface.move_object()
+        elif action_type == "returnobject":
+            completed = self.robot_interface.put_object_down()
         else:
             completed = self.robot_interface.open_hand_and_go_home()
 

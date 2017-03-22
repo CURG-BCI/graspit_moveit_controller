@@ -57,6 +57,13 @@ class WorldManager:
 
         self.model_manager.refresh()
 
+        experiment_type = rospy.get_param('/experiment_type')
+        print("experiment type: " + experiment_type)
+        if not experiment_type == "block":
+            print("about to filter_objects_from_model_list()")
+            self.filter_objects_from_model_list()
+            print("finished filter_objects_from_model_list()")
+
         print("about to add_all_objects_to_planner()")
         self.add_all_objects_to_planner()
         print("finished add_all_objects_to_planner()")
@@ -65,6 +72,7 @@ class WorldManager:
         print("graspit_msgs.msg.RunObjectRecognitionResult()")
 
         for model in self.model_manager.model_list:
+            print("frame: " + model.detected_frame)
             object_info = graspit_msgs.msg.ObjectInfo(model.object_name, model.model_name, model.get_world_pose())
             _result.object_info.append(object_info)
         print("finished for loop")
@@ -95,6 +103,24 @@ class WorldManager:
 
             body_names = self.get_body_names_from_planner()
 
+    def filter_objects_from_model_list(self):
+        new_model_list = []
+        for model in self.model_manager.model_list:
+            model.detected_frame = "/camera_depth_optical_frame"
+            pose = model.get_world_pose()
+
+            x_filter_limit_min = -0.5
+            x_filter_limit_max = -0.1
+
+            y_filter_limit_min = 0.0
+            y_filter_limit_max = 0.32
+
+            if (x_filter_limit_min <= pose.position.x <= x_filter_limit_max) and ( y_filter_limit_min <= pose.position.y <= y_filter_limit_max):
+                new_model_list.append(model)
+
+        self.model_manager.model_list = new_model_list
+
+
     def add_all_objects_to_planner(self):
         self.add_obstacles()
         for model in self.model_manager.model_list:
@@ -107,7 +133,10 @@ class WorldManager:
                 stamped_model_pose.header.frame_id = "/world"
                 stamped_model_pose.pose = model.get_world_pose()
 
-                self.scene.add_mesh_autoscaled(model.object_name, stamped_model_pose, filename)
+                try:
+                    self.scene.add_mesh_autoscaled(model.object_name, stamped_model_pose, filename)
+                except:
+                    continue
 
             else:
                 rospy.logwarn('File doesn\'t exist - object %s, filename %s' % (model.object_name, filename))
@@ -166,8 +195,8 @@ class WorldManager:
 
         back_wall_pose = geometry_msgs.msg.PoseStamped()
         back_wall_pose.header.frame_id = '/world'
-        wall_dimensions = [1.45, .05, .5]
-        back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': .35, 'y': 0.2, 'z': 0.28})
+        wall_dimensions = [1.45, .05, 1.0]
+        back_wall_pose.pose.position = geometry_msgs.msg.Point(**{'x': -0.1, 'y': -0.3, 'z': 0.1})
         back_wall_pose.pose.orientation = geometry_msgs.msg.Quaternion(**{'x': 0,
                                                                           'y': 0,
                                                                           'z': 0,
@@ -176,7 +205,7 @@ class WorldManager:
         self.scene.add_box("back_wall", back_wall_pose, wall_dimensions)
 
     def add_bin_wall(self, w, d, h, x, y, z, wall_name):
-        time.sleep(1)
+        time.sleep(0.5)
         bin_pose = geometry_msgs.msg.PoseStamped()
         bin_pose.header.frame_id = '/root'
         bin_dimensions = [w, d, h]
@@ -213,8 +242,10 @@ class WorldManager:
         l_1 = 0.537
         l_2 = 0.254
         thickness = 0.01
-        x = -0.1
+        x = -0.2
         y = -l_1 / 2
+
+        #assuming these are meters
 
         self.add_bin_wall(thickness, l_2, h,
                          y, x - l_2/2, z, "left_bin_wall")
@@ -227,14 +258,17 @@ class WorldManager:
 
         self.add_bin_wall(thickness, 0.254, 0.152,
                          y + l_1/2,  x - l_2/2, 0.076, "center_bin_wall")
+        rospy.sleep(2.)
 
     def add_obstacles(self):
         self.add_table()
-        experiment_type = rospy.get_param('~experiment_type')
-        if experiment_type == "block":
-            self.add_bin()
-        # self.add_walls()
-        # self.add_base()
+        experiment_type = rospy.get_param('/experiment_type')
+        # TO ADD WALLS FOR BOX & BLOCKS EXPERIMENT:
+        # if experiment_type == "block":
+        #     self.add_bin()
+        # self.add_bin()
+        self.add_walls()
+        self.add_base()
 
 
 if __name__ == '__main__':
