@@ -57,13 +57,6 @@ class WorldManager:
 
         self.model_manager.refresh()
 
-        experiment_type = rospy.get_param('/experiment_type')
-        print("experiment type: " + experiment_type)
-        if not experiment_type == "block":
-            print("about to filter_objects_from_model_list()")
-            self.filter_objects_from_model_list()
-            print("finished filter_objects_from_model_list()")
-
         print("about to add_all_objects_to_planner()")
         self.add_all_objects_to_planner()
         print("finished add_all_objects_to_planner()")
@@ -103,24 +96,6 @@ class WorldManager:
 
             body_names = self.get_body_names_from_planner()
 
-    def filter_objects_from_model_list(self):
-        new_model_list = []
-        for model in self.model_manager.model_list:
-            model.detected_frame = "/camera_depth_optical_frame"
-            pose = model.get_world_pose()
-
-            x_filter_limit_min = -0.5
-            x_filter_limit_max = -0.1
-
-            y_filter_limit_min = 0.0
-            y_filter_limit_max = 0.32
-
-            if (x_filter_limit_min <= pose.position.x <= x_filter_limit_max) and ( y_filter_limit_min <= pose.position.y <= y_filter_limit_max):
-                new_model_list.append(model)
-
-        self.model_manager.model_list = new_model_list
-
-
     def add_all_objects_to_planner(self):
         self.add_obstacles()
         for model in self.model_manager.model_list:
@@ -133,10 +108,10 @@ class WorldManager:
                 stamped_model_pose.header.frame_id = "/world"
                 stamped_model_pose.pose = model.get_world_pose()
 
-                try:
-                    self.scene.add_mesh_autoscaled(model.object_name, stamped_model_pose, filename)
-                except:
-                    continue
+                # try:
+                #     self.scene.add_mesh_autoscaled(model.object_name, stamped_model_pose, filename)
+                # except:
+                #     continue
 
             else:
                 rospy.logwarn('File doesn\'t exist - object %s, filename %s' % (model.object_name, filename))

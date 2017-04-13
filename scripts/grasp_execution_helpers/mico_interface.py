@@ -48,8 +48,8 @@ class RobotInterface:
 
         waypoints = compute_waypoints(fraction=fraction, x_distance=x_distance, y_distance=y_distance, z_distance=z_distance)
 
-        for waypoint in waypoints:
-            print waypoint
+        # for waypoint in waypoints:
+        #     print waypoint
 
         (plan, planned_fraction) = self.group.compute_cartesian_path(
             waypoints,  # waypoints to follow

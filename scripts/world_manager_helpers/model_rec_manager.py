@@ -21,7 +21,7 @@ import StringIO
 
 
 class ModelManager(object):
-    def __init__(self, model_name, pose, NEW_MODEL_REC):
+    def __init__(self, model_name, pose, NEW_MODEL_REC, experiment_type):
         self.NEW_MODEL_REC = NEW_MODEL_REC
         self.model_name = model_name
         self.object_name = model_name
@@ -29,6 +29,10 @@ class ModelManager(object):
         self.bc = ModelRecManager.tf_broadcaster
         self.listener = ModelRecManager.tf_listener
         self.detected_frame = "/kinect2_rgb_optical_frame"
+        # if experiment_type == "block":
+        #
+        # else:
+        #     self.detected_frame = "/camera_depth_optical_frame"
 
     def broadcast_tf(self):
         tf_pose = pm.toTf(pm.fromMsg(self.pose))
@@ -89,7 +93,7 @@ class ModelRecManager(object):
             # if self.experiment_type == "block" and "block" not in resp.object_name[i]:
             #     continue
             self.model_list.append(ModelManager(resp.object_name[i],
-                                                resp.object_pose[i], self.NEW_MODEL_REC))
+                                                resp.object_pose[i], self.NEW_MODEL_REC, self.experiment_type))
         self.uniquify_object_names()
 
         for model in self.model_list:
