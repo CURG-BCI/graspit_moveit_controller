@@ -30,14 +30,14 @@ class GraspExecutionNode():
         self.grasp_approach_tran_frame = rospy.get_param('/approach_tran_frame', '/approach_tran')
         self.trajectory_display_topic = rospy.get_param('trajectory_display_topic', "/move_group/display_planned_path")
         self.grasp_listener_topic = rospy.get_param('grasp_listener_topic', "/graspit/grasps")
-        self.move_group_name = rospy.get_param('/arm_name', 'manipulator')
+        self.move_group_name = rospy.get_param('/arm_name', 'arm')
         self.reachability_planner_id = self.move_group_name + rospy.get_param('grasp_executer/planner_config_name',
                                                                               '[PRMkConfigDefault]')
         self.allowed_planning_time = rospy.get_param('~allowed_planning_time')
 
         display_trajectory_publisher = rospy.Publisher(self.trajectory_display_topic, moveit_msgs.msg.DisplayTrajectory)
 
-        self.trajectory_action_client = actionlib.SimpleActionClient('/mico_arm_driver/controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
+        self.trajectory_action_client = actionlib.SimpleActionClient('/m1n6s200/follow_joint_trajectory/goal', control_msgs.msg.FollowJointTrajectoryAction)
         hand_manager = common_helpers.GraspManager.GraspManager(jaco_manager, self.move_group_name)
 
         moveit_commander.roscpp_initialize(sys.argv)

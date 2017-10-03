@@ -8,8 +8,8 @@ class GraspManager(object):
             barrett_default_hand_closing_subspace = {'finger1/dist_joint': 1/3, 'finger1/med_joint': 1, 'finger1/prox_joint': 0,
                                                      'finger2/dist_joint': 1/3, 'finger2/med_joint': 1, 'finger2/prox_joint': 0,
                                                      'finger3/dist_joint': 1/3, 'finger3/med_joint': 1}
-            jaco_default_hand_closing_subspace = {'mico_joint_finger_1': 1, 'mico_joint_finger_1_distal': 0,
-                                                  'mico_joint_finger_2': 1, 'mico_joint_finger_2_distal': 0}
+            jaco_default_hand_closing_subspace = {'m1n6s200_link_finger_1': 1, 'm1n6s200_link_finger_tip_1': 0,
+                                                  'm1n6s200_link_finger_2': 1, 'm1n6s200_link_finger_tip_2': 0}
 
             barrett_default_hand_closed_angle = 2
             jaco_default_hand_closed_angle = math.pi/180*60 ## ???
@@ -17,12 +17,12 @@ class GraspManager(object):
             barrett_default_hand_preshape_subspace = {'finger1/dist_joint': 0, 'finger1/med_joint': 0, 'finger1/prox_joint': 1,
                                                       'finger2/dist_joint': 0, 'finger2/med_joint': 0, 'finger2/prox_joint': 1,
                                                       'finger3/dist_joint': 0, 'finger3/med_joint': 0}
-            jaco_default_hand_preshape_subspace = {'mico_joint_finger_1': 0, 'mico_joint_finger_1_distal': 0,
-                                                  'mico_joint_finger_2': 0, 'mico_joint_finger_2_distal': 0}
+            jaco_default_hand_preshape_subspace = {'m1n6s200_link_finger_1': 0, 'm1n6s200_link_finger_tip_1': 0,
+                                                  'm1n6s200_link_finger_2': 0, 'm1n6s200_link_finger_tip_2': 0}
 
             barrett_default_hand_joint_order = ['finger1/med_joint', 'finger2/med_joint', 'finger3/med_joint',
                                                 'finger1/prox_joint']
-            jaco_default_hand_joint_order = ['mico_joint_finger_1', 'mico_joint_finger_2']
+            jaco_default_hand_joint_order = ['m1n6s200_joint_finger_1', 'm1n6s200_joint_finger_2']
 
             default_hand_closing_subspace = jaco_default_hand_closing_subspace
             default_hand_closed_angle = jaco_default_hand_closed_angle

@@ -1,7 +1,7 @@
 import rospy
 import control_msgs.msg
 import moveit_msgs.msg
-import jaco_msgs.srv
+import kinova_msgs.srv
 import numpy as np
 import math
 import tf
@@ -160,7 +160,7 @@ class RobotInterface:
                 rospy.loginfo("Arm is already home, no need to home it.")
             elif is_near_goal(plan):
                 rospy.loginfo("MICO Arm is close to home, no need to plan path.")
-                gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', jaco_msgs.srv.HomeArm)
+                gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', kinova_msgs.srv.HomeArm)
                 gohome()
             else:
                 rospy.loginfo("Arm is not home, so homing it")

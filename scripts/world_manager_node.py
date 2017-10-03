@@ -242,7 +242,7 @@ class WorldManager:
         # if experiment_type == "block":
         #     self.add_bin()
         # self.add_bin()
-        self.add_walls()
+        # self.add_walls()
         self.add_base()
 
 

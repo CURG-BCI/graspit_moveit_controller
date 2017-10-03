@@ -1,8 +1,8 @@
 import rospy
 import control_msgs.msg
 import moveit_msgs.msg
-import jaco_msgs.srv
-import jaco_msgs.msg
+import kinova_msgs.srv
+import kinova_msgs.msg
 import numpy as np
 import math
 import tf
@@ -23,7 +23,7 @@ class RobotInterface:
         self.hand_manager = hand_manager
         self.group = group
         self.grasp_reachability_analyzer = grasp_reachability_analyzer
-        self.rotate_pub = rospy.Publisher('/mico_arm_driver/joint_angles/arm_joint_angles/goal', jaco_msgs.msg.ArmJointAnglesActionGoal, queue_size=10)
+        self.rotate_pub = rospy.Publisher('/mico_arm_driver/joint_angles/arm_joint_angles/goal', kinova_msgs.msg.ArmJointAnglesActionGoal, queue_size=10)
 
     def waypoints_translation(self, fraction=1.0, x_distance=0.0, y_distance=0.0, z_distance=0.0, server=None):
 
@@ -48,8 +48,8 @@ class RobotInterface:
 
         waypoints = compute_waypoints(fraction=fraction, x_distance=x_distance, y_distance=y_distance, z_distance=z_distance)
 
-        # for waypoint in waypoints:
-        #     print waypoint
+        for waypoint in waypoints:
+            print waypoint
 
         (plan, planned_fraction) = self.group.compute_cartesian_path(
             waypoints,  # waypoints to follow
@@ -85,16 +85,6 @@ class RobotInterface:
     def rotate_base(self, rotation):
         self.group.clear_pose_targets()
         group_variable_values = self.group.get_current_joint_values()
-        # goal = jaco_msgs.msg.ArmJointAnglesActionGoal()
-        # goal.goal.angles.joint1 = group_variable_values[0] + rotation#-1.8603088994580952
-        # goal.goal.angles.joint2 = group_variable_values[1]#-1.6535711019001942
-        # goal.goal.angles.joint3 = group_variable_values[2]#0.1944244748554111
-        # goal.goal.angles.joint4 = group_variable_values[3]#-1.101937495822704
-        # goal.goal.angles.joint5 = group_variable_values[4]#1.6731360148484626
-        # goal.goal.angles.joint6 = group_variable_values[5]#-2.8774134650407386
-        # goal.goal_id.id = '420'
-        # rospy.loginfo("Rotating base joint by " + str(rotation) + " to " + str(goal.goal.angles.joint1))
-        # self.rotate_pub.publish(goal)
 
         rospy.loginfo("Current rotation values: " + str(group_variable_values))
         group_variable_values[0] += rotation
@@ -124,8 +114,9 @@ class RobotInterface:
         z_distance = 0.275514443391 - pose.position.z
         x_distance = -0.36
         rospy.loginfo("Moving from %f to %f" % (pose.position.x, x_distance - pose.position.x))
-        success, fraction = self.waypoints_translation(z_distance=0.05, server=server)
-        success, fraction = self.waypoints_translation(x_distance=x_distance, z_distance=-0.1, server=server)
+        # success, fraction = self.waypoints_translation(z_distance=0.05, server=server)
+        # success, fraction = self.waypoints_translation(x_distance=x_distance, z_distance=-0.1, server=server)
+        success, fraction = self.waypoints_translation(x_distance=x_distance, z_distance=-0.05, server=server)
         rospy.loginfo("Final position: " + str(self.group.get_current_pose().pose))
 
         # rospy.loginfo("Waypoint translation down by 0.10")
@@ -303,7 +294,7 @@ class RobotInterface:
 
         if not success:
             #Force it
-            gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', jaco_msgs.srv.HomeArm)
+            gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', kinova_msgs.srv.HomeArm)
             gohome()
             return True
         else:
@@ -311,7 +302,7 @@ class RobotInterface:
                 rospy.loginfo("Arm is already home, no need to home it.")
             elif is_near_goal(plan):
                 rospy.loginfo("MICO Arm is close to home, no need to plan path.")
-                gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', jaco_msgs.srv.HomeArm)
+                gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', kinova_msgs.srv.HomeArm)
                 gohome()
             else:
                 rospy.loginfo("Arm is not home, so homing it")
@@ -319,7 +310,7 @@ class RobotInterface:
                 rospy.loginfo("Arm homed with success: " + str(success))
 
         if not success:
-            gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', jaco_msgs.srv.HomeArm)
+            gohome = rospy.ServiceProxy('/mico_arm_driver/in/home_arm', kinova_msgs.srv.HomeArm)
             gohome()
             return True
 

@@ -1,7 +1,7 @@
 __author__ = 'jvarley'
 import roslib
 
-roslib.load_manifest('jaco_msgs')
+roslib.load_manifest('kinova_msgs')
 import rospy
 from numpy import array
 
@@ -9,20 +9,20 @@ import actionlib
 
 import math
 
-import jaco_msgs.msg
+import kinova_msgs.msg
 
 import numpy
 import time
 
 
 def move_hand(positions, blocking=True):
-    _client = actionlib.SimpleActionClient('/mico_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
+    _client = actionlib.SimpleActionClient('/mico_arm_driver/fingers/finger_positions', kinova_msgs.msg.SetFingersPositionAction)
     time.sleep(0.1)
     angles = numpy.zeros([3,1])
     angles[0] = (.001+positions[0])*180/math.pi*6400/60
     angles[1] = (.001+positions[1])*180/math.pi*6400/60
 
-    goal = jaco_msgs.msg.SetFingersPositionGoal()
+    goal = kinova_msgs.msg.SetFingersPositionGoal()
 
     if len(positions) <= 4:
         goal.fingers.finger1 = angles[0][0]
@@ -112,6 +112,6 @@ def get_mico_joints():
 
        Returns the current joint position of the hand as a list.
     """
-    msg = rospy.wait_for_message("/mico_arm_driver/out/finger_position", jaco_msgs.msg.FingerPosition)
+    msg = rospy.wait_for_message("/mico_arm_driver/out/finger_position", kinova_msgs.msg.FingerPosition)
     return [msg.finger1, msg.finger2, msg.finger3]
 

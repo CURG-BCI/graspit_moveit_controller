@@ -11,6 +11,7 @@ from numpy import mat
 import tf
 import tf.transformations
 import tf_conversions.posemath as pm
+import numpy as np
 
 import objrec_ros_integration, objrec_ros_integration.srv
 # import model_rec2, model_rec2.srv
@@ -25,14 +26,27 @@ class ModelManager(object):
         self.NEW_MODEL_REC = NEW_MODEL_REC
         self.model_name = model_name
         self.object_name = model_name
-        self.pose = pose
+
+        self.old_pose = pose
+
+        pose_frame = pm.fromMsg(pose)
+        pose_mat = pm.toMatrix(pose_frame)
+
+        #rotate to keep moveit world consistent with graspit world
+        rot = np.identity(4)
+        rot[0][0] = -1
+        rot[2][2] = -1
+
+        pmat_new = np.dot(pose_mat, rot)
+        pmat_new_frame = pm.fromMatrix(pmat_new)
+        pmat_msg = pm.toMsg(pmat_new_frame)
+
+        pmat_msg.position.z += 0.05
+
+        self.pose = pmat_msg
         self.bc = ModelRecManager.tf_broadcaster
         self.listener = ModelRecManager.tf_listener
         self.detected_frame = "/kinect2_rgb_optical_frame"
-        # if experiment_type == "block":
-        #
-        # else:
-        #     self.detected_frame = "/camera_depth_optical_frame"
 
     def broadcast_tf(self):
         tf_pose = pm.toTf(pm.fromMsg(self.pose))
@@ -41,19 +55,26 @@ class ModelManager(object):
         else:
             self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), self.object_name, "/world")
 
+        tf_pose = pm.toTf(pm.fromMsg(self.old_pose))
+        if self.NEW_MODEL_REC:
+            self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, self.detected_frame)
+        else:
+            self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, "/world")
+
     def get_dist(self):
         self.broadcast_tf()
-        self.listener.waitForTransform(self.detected_frame, self.object_name, rospy.Time(0), rospy.Duration(10))
-        (trans, rot) = self.listener.lookupTransform(self.detected_frame, self.object_name, rospy.Time(0))
+        self.listener.waitForTransform(self.detected_frame, "graspit" + self.object_name, rospy.Time(0), rospy.Duration(10))
+        (trans, rot) = self.listener.lookupTransform(self.detected_frame, "graspit" + self.object_name, rospy.Time(0))
         return linalg.norm(trans)
 
     def __len__(self):
         return self.get_dist()
 
+    # GET GRASPIT POSE
     def get_world_pose(self):
         self.broadcast_tf()
-        self.listener.waitForTransform("/world", self.object_name, rospy.Time(0),rospy.Duration(10))
-        return pm.toMsg(pm.fromTf(self.listener.lookupTransform("/world", self.object_name, rospy.Time(0))))
+        self.listener.waitForTransform("/world", "graspit" + self.object_name, rospy.Time(0),rospy.Duration(10))
+        return pm.toMsg(pm.fromTf(self.listener.lookupTransform("/world", "graspit" + self.object_name, rospy.Time(0))))
 
 class ModelRecManager(object):
 

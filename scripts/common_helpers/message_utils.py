@@ -47,7 +47,7 @@ def mico_positions_from_graspit_positions(positions):
     :rtype (list[string],list[float])
     """
     joint_positions = [positions[0], positions[0]]
-    joint_names = ['mico_joint_finger_1', 'mico_joint_finger_2']
+    joint_names = ['m1n6s200_joint_finger_1', 'm1n6s200_joint_finger_2']
     return joint_names, joint_positions
 
 
