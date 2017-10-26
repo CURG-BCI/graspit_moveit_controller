@@ -237,7 +237,7 @@ class WorldManager:
 
     def add_obstacles(self):
         self.add_table()
-        experiment_type = rospy.get_param('/experiment_type')
+        # experiment_type = rospy.get_param('/experiment_type')
         # TO ADD WALLS FOR BOX & BLOCKS EXPERIMENT:
         # if experiment_type == "block":
         #     self.add_bin()
