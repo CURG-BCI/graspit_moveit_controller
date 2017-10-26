@@ -3,22 +3,21 @@
 @brief - calls model_rec and then manages the resulting models. Broadcast the pointclouds and TF
 """
 
-import roslib; roslib.load_manifest("moveit_trajectory_planner" )
+import roslib
+
 import rospy
-from numpy import dot,  linalg
-from numpy import mat
+from numpy import linalg
 
 import tf
 import tf.transformations
 import tf_conversions.posemath as pm
 import numpy as np
 
-import objrec_ros_integration, objrec_ros_integration.srv
-# import model_rec2, model_rec2.srv
-import sensor_msgs, sensor_msgs.msg
+import block_recognition
+import block_recognition.srv
 import graspit_msgs.srv
 
-import StringIO
+roslib.load_manifest("moveit_trajectory_planner")
 
 
 class ModelManager(object):
@@ -32,7 +31,7 @@ class ModelManager(object):
         pose_frame = pm.fromMsg(pose)
         pose_mat = pm.toMatrix(pose_frame)
 
-        #rotate to keep moveit world consistent with graspit world
+        # rotate to keep moveit world consistent with graspit world
         rot = np.identity(4)
         rot[0][0] = -1
         rot[2][2] = -1
@@ -76,10 +75,11 @@ class ModelManager(object):
         self.listener.waitForTransform("/world", "graspit" + self.object_name, rospy.Time(0),rospy.Duration(10))
         return pm.toMsg(pm.fromTf(self.listener.lookupTransform("/world", "graspit" + self.object_name, rospy.Time(0))))
 
+
 class ModelRecManager(object):
 
-    def __init__(self, NEW_MODEL_REC):
-        self.NEW_MODEL_REC = NEW_MODEL_REC
+    def __init__(self, new_model_rec):
+        self.NEW_MODEL_REC = new_model_rec
         self.__publish_target = True
         self.model_list = list()
 
@@ -94,7 +94,7 @@ class ModelRecManager(object):
         # clear out old models
         self.model_list = list()
 
-        find_objects_srv = rospy.ServiceProxy('/objrec_node/find_blocks', objrec_ros_integration.srv.FindObjects)
+        find_objects_srv = rospy.ServiceProxy('/objrec_node/find_blocks', block_recognition.srv.FindObjects)
 
         resp = find_objects_srv()
 
