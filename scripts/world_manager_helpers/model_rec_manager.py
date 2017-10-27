@@ -21,8 +21,7 @@ roslib.load_manifest("moveit_trajectory_planner")
 
 
 class ModelManager(object):
-    def __init__(self, model_name, pose, NEW_MODEL_REC):
-        self.NEW_MODEL_REC = NEW_MODEL_REC
+    def __init__(self, model_name, pose, tf_broadcaster, tf_listener):
         self.model_name = model_name
         self.object_name = model_name
 
@@ -43,22 +42,18 @@ class ModelManager(object):
         pmat_msg.position.z += 0.05
 
         self.pose = pmat_msg
-        self.bc = ModelRecManager.tf_broadcaster
-        self.listener = ModelRecManager.tf_listener
+        self.bc = tf_broadcaster
+        self.listener = tf_listener
         self.detected_frame = "/kinect2_rgb_optical_frame"
 
     def broadcast_tf(self):
         tf_pose = pm.toTf(pm.fromMsg(self.pose))
-        if self.NEW_MODEL_REC:
-            self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), self.object_name, self.detected_frame)
-        else:
-            self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), self.object_name, "/world")
+
+        self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), self.object_name, "/world")
 
         tf_pose = pm.toTf(pm.fromMsg(self.old_pose))
-        if self.NEW_MODEL_REC:
-            self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, self.detected_frame)
-        else:
-            self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, "/world")
+
+        self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, "/world")
 
     def get_dist(self):
         self.broadcast_tf()
@@ -78,16 +73,13 @@ class ModelManager(object):
 
 class ModelRecManager(object):
 
-    def __init__(self, new_model_rec):
-        self.NEW_MODEL_REC = new_model_rec
+    def __init__(self):
         self.__publish_target = True
         self.model_list = list()
 
         self.tf_listener = tf.TransformListener()
         self.tf_broadcaster = tf.TransformBroadcaster()
 
-        ModelRecManager.tf_listener = self.tf_listener
-        ModelRecManager.tf_broadcaster = self.tf_broadcaster
         self.model_name_server = rospy.Service('/get_object_info', graspit_msgs.srv.GetObjectInfo, self.get_object_info)
 
     def refresh(self):
@@ -102,7 +94,7 @@ class ModelRecManager(object):
             rospy.loginfo("Adding ModelManager for object " + str(resp.object_name[i]) )
             rospy.loginfo("Pose: " + str(resp.object_pose[i]))
 
-            self.model_list.append(ModelManager(resp.object_name[i], resp.object_pose[i], self.NEW_MODEL_REC))
+            self.model_list.append(ModelManager(resp.object_name[i], resp.object_pose[i], self.tf_listener, self.tf_broadcaster))
         self.uniquify_object_names()
 
         for model in self.model_list:
