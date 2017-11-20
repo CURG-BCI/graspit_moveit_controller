@@ -94,7 +94,7 @@ class ModelRecManager(object):
             rospy.loginfo("Adding ModelManager for object " + str(resp.object_name[i]) )
             rospy.loginfo("Pose: " + str(resp.object_pose[i]))
 
-            self.model_list.append(ModelManager(resp.object_name[i], resp.object_pose[i], self.tf_listener, self.tf_broadcaster))
+            self.model_list.append(ModelManager(resp.object_name[i], resp.object_pose[i], self.tf_broadcaster, self.tf_listener))
         self.uniquify_object_names()
 
         for model in self.model_list:
