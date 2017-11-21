@@ -49,11 +49,11 @@ class ModelManager(object):
     def broadcast_tf(self):
         tf_pose = pm.toTf(pm.fromMsg(self.pose))
 
-        self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), self.object_name, "/world")
+        self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), self.object_name, "/kinect2_rgb_optical_frame")
 
-        tf_pose = pm.toTf(pm.fromMsg(self.old_pose))
+        # tf_pose = pm.toTf(pm.fromMsg(self.old_pose))
 
-        self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, "/world")
+        self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, "/kinect2_rgb_optical_frame")
 
     def get_dist(self):
         self.broadcast_tf()

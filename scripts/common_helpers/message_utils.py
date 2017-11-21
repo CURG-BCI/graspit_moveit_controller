@@ -109,11 +109,6 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     :rtype: moveit_msgs.msg.Grasp
     """
     # 'manipulator' is the name for the root move group in the mico arm
-    moveit_positions_from_graspit_positions = {'StaubliArm': barrett_positions_from_graspit_positions,
-                                               'manipulator': mico_positions_from_graspit_positions}
-    move_group_name = rospy.get_param('/arm_name', 'manipulator')
-    moveit_positions_from_graspit_positions_fcn = moveit_positions_from_graspit_positions[move_group_name]
-
     moveit_grasp = moveit_msgs.msg.Grasp()
 
     # # This message contains a description of a grasp that would be used
@@ -136,7 +131,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     #
     pre_grasp_goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
     spread_pregrasp_dof = (0, 0, 0, 0)
-    pre_grasp_joint_names, pre_grasp_goal_point.positions = moveit_positions_from_graspit_positions_fcn(spread_pregrasp_dof)
+    pre_grasp_joint_names, pre_grasp_goal_point.positions = mico_positions_from_graspit_positions(spread_pregrasp_dof)
     moveit_grasp.pre_grasp_posture.points.append(pre_grasp_goal_point)
     moveit_grasp.pre_grasp_posture.joint_names = pre_grasp_joint_names
 
@@ -146,7 +141,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # trajectory_msgs/JointTrajectory grasp_posture
     #
     goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    joint_names, goal_point.positions = moveit_positions_from_graspit_positions_fcn(graspit_grasp_msg.pre_grasp_dof)
+    joint_names, goal_point.positions = mico_positions_from_graspit_positions(graspit_grasp_msg.pre_grasp_dof)
     moveit_grasp.grasp_posture.joint_names = joint_names
     moveit_grasp.grasp_posture.points.append(goal_point)
 
@@ -226,7 +221,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     return moveit_grasp
 
 
-def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
+def build_pickup_goal(moveit_grasp_msg, object_name, allowed_planning_time, planner_id, planning_group):
     """
     :type planning_group: moveit_commander.MoveGroupCommander
     """
@@ -251,7 +246,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string end_effector
     #
-    pickup_goal.end_effector = rospy.get_param('end_effector_name', 'end_effector')
+    pickup_goal.end_effector = "gripper"
 
     # # a list of possible grasps to be used. At least one grasp must be filled in
     #
@@ -264,7 +259,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string support_surface_name
     #
-    pickup_goal.support_surface_name = "table"
+    # pickup_goal.support_surface_name = "table"
 
     # # whether collisions between the gripper and the support surface should be acceptable
     # # during move from pre-grasp to grasp and during lift. Collisions when moving to the
@@ -279,18 +274,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string[] attached_object_touch_links
     #
-    # pickup_goal.attached_object_touch_links = ['barrett_mount_link', 'approach_tran', 'staubli_rx60l_link7',
-    #                                            'wam/bhand/bhand_palm_link',
-    #                                            'wrist_load_cell',
-    #                                             'wam/bhand/finger_1/dist_link',
-    #                                             'wam/bhand/finger_1/med_link',
-    #                                             'wam/bhand/finger_1/prox_link',
-    #                                             'wam/bhand/finger_2/dist_link',
-    #                                             'wam/bhand/finger_2/med_link',
-    #                                             'wam/bhand/finger_2/prox_link',
-    #                                             'wam/bhand/finger_3/dist_link',
-    #                                             'wam/bhand/finger_3/med_link',
-    #                                             'wam/bhand/finger_3/prox_link']
+    # pickup_goal.attached_object_touch_links = []
 
     # # Optionally notify the pick action that it should approach the object further,
     # # as much as possible (this minimizing the distance to the object before the grasp)
@@ -309,6 +293,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string planner_id
     #
+    pickup_goal.planner_id = planner_id
 
     # # an optional list of obstacles that we have semantic information about
     # # and that can be touched/pushed/moved in the course of grasping;
@@ -316,13 +301,13 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #
     # string[] allowed_touch_objects
     #
-    #pickup_goal.allowed_touch_objects = ['all']
+    pickup_goal.allowed_touch_objects = ['all']
 
     # # The maximum amount of time the motion planner is allowed to plan for
     #
     # float64 allowed_planning_time
     #
-    pickup_goal.allowed_planning_time = rospy.get_param('~allowed_planning_time', 5)
+    pickup_goal.allowed_planning_time = allowed_planning_time
 
     # # Planning options
     #
@@ -334,7 +319,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     pickup_goal.planning_options.replan_delay = 10.0
 
     ## Constraints
-    
+
     # joint_tolerance = rospy.get_param('joint_path_tolerance',math.pi)
     # rospy.loginfo('joint tolerance constraint in planner %f'%(joint_tolerance))
     # joint_names = planning_group.get_joints()
@@ -343,6 +328,6 @@ def build_pickup_goal(moveit_grasp_msg, object_name, planning_group):
     #                                                      tolerance_below=joint_tolerance, weight=1)
     #                      for name, val in zip(joint_names, joint_values)]
 
-    #pickup_goal.path_constraints.joint_constraints = joint_constraints
+    # pickup_goal.path_constraints.joint_constraints = joint_constraints
 
     return pickup_goal
