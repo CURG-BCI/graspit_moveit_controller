@@ -67,8 +67,8 @@ class ModelManager(object):
     # GET GRASPIT POSE
     def get_world_pose(self):
         self.broadcast_tf()
-        self.listener.waitForTransform("/world", "graspit" + self.object_name, rospy.Time(0),rospy.Duration(10))
-        return pm.toMsg(pm.fromTf(self.listener.lookupTransform("/world", "graspit" + self.object_name, rospy.Time(0))))
+        self.listener.waitForTransform("/world", self.object_name, rospy.Time(0),rospy.Duration(10))
+        return pm.toMsg(pm.fromTf(self.listener.lookupTransform("/world", self.object_name, rospy.Time(0))))
 
 
 class ModelRecManager(object):

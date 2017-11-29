@@ -100,10 +100,10 @@ class WorldManager:
                 stamped_model_pose.header.frame_id = "/world"
                 stamped_model_pose.pose = model.get_world_pose()
 
-                # try:
-                #     self.scene.add_mesh_autoscaled(model.object_name, stamped_model_pose, filename)
-                # except:
-                #     continue
+                try:
+                    self.scene.add_mesh_autoscaled(model.object_name, stamped_model_pose, filename)
+                except:
+                    continue
 
             else:
                 rospy.logwarn('File doesn\'t exist - object %s, filename %s' % (model.object_name, filename))
@@ -129,7 +129,7 @@ class WorldManager:
         box_pose.pose.orientation.w = 0
         box_dimensions = (table_x, table_y, table_z)
 
-        self.scene.attach_box(world_manager.robot.get_link_names()[0], "table", box_pose, box_dimensions)
+        self.scene.add_box("table", box_pose, box_dimensions)
         rospy.loginfo("table added")
 
     def add_base(self):
@@ -155,12 +155,13 @@ class WorldManager:
         box_pose.pose.orientation.w = 0
         box_dimensions = (base_x, base_y, base_z)
 
-        self.scene.attach_box(world_manager.robot.get_link_names()[1], "robot_base", box_pose, box_dimensions)
+        self.scene.add_box("robot_base", box_pose, box_dimensions)
         rospy.loginfo("base added")
 
     def add_obstacles(self):
-        self.add_table()
-        self.add_base()
+        # self.add_table()
+        # self.add_base()
+        pass
 
 
 if __name__ == '__main__':

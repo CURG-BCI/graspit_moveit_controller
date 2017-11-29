@@ -68,28 +68,7 @@ class GraspReachabilityAnalyzer():
         self.markerPub.publish(grasp_marker)
 
 
-    def query_moveit_for_reachability(self, graspit_grasp_msg):
-        """
-        :type graspit_grasp_msg: graspit_msgs.msg.Grasp
-        """
-        # self.move_group.set_planning_time(rospy.get_param('~allowed_planning_time'))
-        self.move_group.set_planning_time(self.allowed_planning_time)
-
-        self.display_grasp_marker(graspit_grasp_msg)
-
-        moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,                                                                       
-                                                                       self.move_group,
-                                                                       self.listener,
-                                                                       self.grasp_approach_tran_frame)
-        rospy.loginfo("moveit_grasp_msg: " + str(moveit_grasp_msg))
-        rospy.loginfo("Planning for %f seconds with planner %s" % (self.allowed_planning_time, self.planner_id))
-
-        pickup_goal = message_utils.build_pickup_goal(moveit_grasp_msg=moveit_grasp_msg,
-                                                      object_name=graspit_grasp_msg.object_name,
-                                                      allowed_planning_time=self.allowed_planning_time,
-                                                      planner_id=self.planner_id,
-                                                      planning_group=self.move_group)
-
+    def send_goal(self, pickup_goal):
         rospy.loginfo("pickup_goal: " + str(pickup_goal))
 
         received_result = False
@@ -113,5 +92,32 @@ class GraspReachabilityAnalyzer():
 
         rospy.loginfo("success of pick_plan_client:" + str(success))
 
-
         return success, result
+
+
+    def query_moveit_for_reachability(self, graspit_grasp_msg):
+        """
+        :type graspit_grasp_msg: graspit_msgs.msg.Grasp
+        """
+        # self.move_group.set_planning_time(rospy.get_param('~allowed_planning_time'))
+        self.move_group.set_planning_time(self.allowed_planning_time)
+
+        self.display_grasp_marker(graspit_grasp_msg)
+
+        moveit_grasp_msg = message_utils.graspit_grasp_to_moveit_grasp(graspit_grasp_msg,                                                                       
+                                                                       self.move_group,
+                                                                       self.listener,
+                                                                       self.grasp_approach_tran_frame)
+        rospy.loginfo("moveit_grasp_msg: " + str(moveit_grasp_msg))
+        rospy.loginfo("Planning for %f seconds with planner %s" % (self.allowed_planning_time, self.planner_id))
+
+        pickup_goal = message_utils.build_pickup_goal(moveit_grasp_msg=moveit_grasp_msg,
+                                                      object_name=graspit_grasp_msg.object_name,
+                                                      allowed_planning_time=self.allowed_planning_time,
+                                                      planner_id=self.planner_id,
+                                                      planning_group=self.move_group)
+
+        import IPython
+        IPython.embed()
+
+        return self.send_goal(pickup_goal)
