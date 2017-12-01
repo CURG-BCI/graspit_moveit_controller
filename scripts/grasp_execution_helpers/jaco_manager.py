@@ -16,6 +16,7 @@ import time
 
 
 def move_hand(positions, blocking=True):
+    return True, "Amazing", []
     _client = actionlib.SimpleActionClient('/mico_arm_driver/fingers/finger_positions', kinova_msgs.msg.SetFingersPositionAction)
     time.sleep(0.1)
     angles = numpy.zeros([3,1])
