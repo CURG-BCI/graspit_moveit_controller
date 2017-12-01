@@ -72,8 +72,6 @@ def graspit_grasp_pose_to_moveit_grasp_pose(move_group_commander, listener, gras
                     "Failed to find transform from %s to %s"%(grasp_frame, move_group_commander.get_end_effector_link()))
         ipdb.set_trace()
 
-
-
     graspit_grasp_msg_final_grasp_tran_matrix = tf_conversions.toMatrix(tf_conversions.fromMsg(graspit_grasp_msg.final_grasp_pose))
     approach_tran_to_end_effector_tran_matrix = tf.TransformerROS().fromTranslationRotation(at_to_ee_tran, at_to_ee_rot)
     actual_ee_pose_matrix = np.dot( graspit_grasp_msg_final_grasp_tran_matrix, approach_tran_to_end_effector_tran_matrix)

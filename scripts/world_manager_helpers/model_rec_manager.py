@@ -21,27 +21,14 @@ roslib.load_manifest("moveit_trajectory_planner")
 
 
 class ModelManager(object):
-    def __init__(self, model_name, pose, tf_broadcaster, tf_listener):
-        self.model_name = model_name
-        self.object_name = model_name
+    def __init__(self, detected_block, tf_broadcaster, tf_listener):
+        self.model_name = detected_block.mesh_filename
+        self.object_name = detected_block.mesh_filename
 
-        self.old_pose = pose
+        self.pose = detected_block.pose_stamped.pose
 
-        pose_frame = pm.fromMsg(pose)
-        pose_mat = pm.toMatrix(pose_frame)
+        self.detected_block = detected_block
 
-        # rotate to keep moveit world consistent with graspit world
-        rot = np.identity(4)
-        rot[0][0] = -1
-        rot[2][2] = -1
-
-        pmat_new = np.dot(pose_mat, rot)
-        pmat_new_frame = pm.fromMatrix(pmat_new)
-        pmat_msg = pm.toMsg(pmat_new_frame)
-
-        pmat_msg.position.z += 0.05
-
-        self.pose = pmat_msg
         self.bc = tf_broadcaster
         self.listener = tf_listener
         self.detected_frame = "/kinect2_rgb_optical_frame"
@@ -51,20 +38,15 @@ class ModelManager(object):
 
         self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), self.object_name, "/kinect2_rgb_optical_frame")
 
-        # tf_pose = pm.toTf(pm.fromMsg(self.old_pose))
-
-        self.bc.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "graspit" + self.object_name, "/kinect2_rgb_optical_frame")
-
     def get_dist(self):
         self.broadcast_tf()
-        self.listener.waitForTransform(self.detected_frame, "graspit" + self.object_name, rospy.Time(0), rospy.Duration(10))
-        (trans, rot) = self.listener.lookupTransform(self.detected_frame, "graspit" + self.object_name, rospy.Time(0))
+        self.listener.waitForTransform(self.detected_frame, self.object_name, rospy.Time(0), rospy.Duration(10))
+        (trans, rot) = self.listener.lookupTransform(self.detected_frame, self.object_name, rospy.Time(0))
         return linalg.norm(trans)
 
     def __len__(self):
         return self.get_dist()
 
-    # GET GRASPIT POSE
     def get_world_pose(self):
         self.broadcast_tf()
         self.listener.waitForTransform("/world", self.object_name, rospy.Time(0),rospy.Duration(10))
@@ -90,11 +72,11 @@ class ModelRecManager(object):
 
         resp = find_objects_srv()
 
-        for i in range(len(resp.object_name)):
-            rospy.loginfo("Adding ModelManager for object " + str(resp.object_name[i]) )
-            rospy.loginfo("Pose: " + str(resp.object_pose[i]))
+        for detected_block in resp.detected_blocks:
+            rospy.loginfo("Adding ModelManager for object {} with unique_name: {}".format(detected_block.mesh_filename, detected_block.unique_block_name))
 
-            self.model_list.append(ModelManager(resp.object_name[i], resp.object_pose[i], self.tf_broadcaster, self.tf_listener))
+            self.model_list.append(ModelManager(detected_block, self.tf_broadcaster, self.tf_listener))
+
         self.uniquify_object_names()
 
         for model in self.model_list:

@@ -8,7 +8,7 @@ from graspit_msgs.srv import *
 
 from world_manager_helpers.extended_planning_scene_interface import ExtendedPlanningSceneInterface
 from world_manager_helpers.model_rec_manager import ModelRecManager
-from world_manager_helpers.object_filename_dict import file_name_dict
+from copy import deepcopy
 
 import moveit_msgs
 import moveit_msgs.srv
@@ -91,22 +91,12 @@ class WorldManager:
     def add_all_objects_to_planner(self):
         self.add_obstacles()
         for model in self.model_manager.model_list:
-            model_name = model.model_name.strip('/')
-            print "Adding " + str(model_name) + "To Moveit"
-            filename = file_name_dict[model_name]
-            if os.path.isfile(filename):
 
-                stamped_model_pose = geometry_msgs.msg.PoseStamped()
-                stamped_model_pose.header.frame_id = "/world"
-                stamped_model_pose.pose = model.get_world_pose()
+            moveit_block_pose = deepcopy(model.detected_block.pose_stamped)
 
-                try:
-                    self.scene.add_mesh_autoscaled(model.object_name, stamped_model_pose, filename)
-                except:
-                    continue
+            block_dimensions = (model.detected_block.edge_length, model.detected_block.edge_length, model.detected_block.edge_length)
 
-            else:
-                rospy.logwarn('File doesn\'t exist - object %s, filename %s' % (model.object_name, filename))
+            self.scene.add_box(model.detected_block.unique_block_name, moveit_block_pose, block_dimensions)
 
     def add_table(self):
 
