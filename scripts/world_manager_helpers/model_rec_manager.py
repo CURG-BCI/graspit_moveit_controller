@@ -23,7 +23,7 @@ roslib.load_manifest("moveit_trajectory_planner")
 class ModelManager(object):
     def __init__(self, detected_block, tf_broadcaster, tf_listener):
         self.model_name = detected_block.mesh_filename
-        self.object_name = detected_block.mesh_filename
+        self.object_name = detected_block.unique_block_name
 
         self.pose = detected_block.pose_stamped.pose
 
@@ -77,11 +77,6 @@ class ModelRecManager(object):
 
             self.model_list.append(ModelManager(detected_block, self.tf_broadcaster, self.tf_listener))
 
-        self.uniquify_object_names()
-
-        for model in self.model_list:
-            model.model_name = model.model_name
-
     def rebroadcast_object_tfs(self):
         for model in self.model_list:
             model.broadcast_tf()
@@ -98,24 +93,4 @@ class ModelRecManager(object):
             object_info = graspit_msgs.msg.ObjectInfo(object_name, model_name, object_pose)
             resp.object_info.append(object_info)
         return resp
-
-    def uniquify_object_names(self):
-        object_name_dict = {}
-        for model in self.model_list:
-            if model.object_name in object_name_dict:
-                object_name_dict[model.object_name].append(model)
-            else:
-                object_name_dict[model.object_name] = [model]
-
-        model_names = dict(object_name_dict)
-
-        for model_list in object_name_dict.values():
-            if len(model_list) > 1:
-                for model_num, model in enumerate(model_list):
-                    test_name = model.object_name
-                    while test_name in model_names:
-                        test_name = "%s_%i" % (model.object_name, model_num)
-                        model_num += 1
-                    model.object_name = test_name
-                    model_names[test_name] = model
 

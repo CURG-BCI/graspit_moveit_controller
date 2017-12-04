@@ -128,10 +128,9 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # trajectory_msgs/JointTrajectory pre_grasp_posture
     #
     pre_grasp_goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    spread_pregrasp_dof = (0, 0, 0, 0)
-    pre_grasp_joint_names, pre_grasp_goal_point.positions = mico_positions_from_graspit_positions(spread_pregrasp_dof)
+    pre_grasp_goal_point.positions = [0, 0]
     moveit_grasp.pre_grasp_posture.points.append(pre_grasp_goal_point)
-    moveit_grasp.pre_grasp_posture.joint_names = pre_grasp_joint_names
+    moveit_grasp.pre_grasp_posture.joint_names = ['m1n6s200_joint_finger_1', 'm1n6s200_joint_finger_2']
 
     # # The internal posture of the hand for the grasp
     # # positions and efforts are used
@@ -139,8 +138,8 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     # trajectory_msgs/JointTrajectory grasp_posture
     #
     goal_point = trajectory_msgs.msg.JointTrajectoryPoint()
-    joint_names, goal_point.positions = mico_positions_from_graspit_positions(graspit_grasp_msg.pre_grasp_dof)
-    moveit_grasp.grasp_posture.joint_names = joint_names
+    goal_point.positions = [0.9, 0.9]
+    moveit_grasp.grasp_posture.joint_names = ['m1n6s200_joint_finger_1', 'm1n6s200_joint_finger_2']
     moveit_grasp.grasp_posture.points.append(goal_point)
 
     # # The position of the end-effector for the grasp.  This is the pose of
@@ -219,7 +218,7 @@ def graspit_grasp_to_moveit_grasp(graspit_grasp_msg, move_group_commander, liste
     return moveit_grasp
 
 
-def build_pickup_goal(moveit_grasp_msg, object_name, allowed_planning_time, planner_id, planning_group):
+def build_pickup_goal(moveit_grasp_msg, object_name, allowed_planning_time, planner_id, planning_group, plan_only):
     """
     :type planning_group: moveit_commander.MoveGroupCommander
     """
@@ -311,7 +310,7 @@ def build_pickup_goal(moveit_grasp_msg, object_name, allowed_planning_time, plan
     #
     # PlanningOptions planning_options
     #
-    pickup_goal.planning_options.plan_only = True
+    pickup_goal.planning_options.plan_only = plan_only
     pickup_goal.planning_options.replan = False
     pickup_goal.planning_options.look_around = False
     pickup_goal.planning_options.replan_delay = 10.0
@@ -327,5 +326,8 @@ def build_pickup_goal(moveit_grasp_msg, object_name, allowed_planning_time, plan
     #                      for name, val in zip(joint_names, joint_values)]
 
     # pickup_goal.path_constraints.joint_constraints = joint_constraints
+
+    pickup_goal.planning_options.planning_scene_diff.is_diff = True
+    pickup_goal.planning_options.planning_scene_diff.robot_state.is_diff = True
 
     return pickup_goal

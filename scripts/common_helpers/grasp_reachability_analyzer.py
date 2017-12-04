@@ -61,6 +61,23 @@ class GraspReachabilityAnalyzer():
         self.tf_broadcaster.sendTransform(tf_pose[0], tf_pose[1], rospy.Time.now(), "/grasp_approach_tran",
                                           graspit_grasp_msg.object_name)
 
+    def execute_pickup_plan(self, mgc_arm, mgc_gripper, pick_plan):
+
+        # pick_plan.trajectory_descriptions
+        # ['plan', 'pre_grasp', 'approach', 'grasp', 'retreat']
+
+        for i in range(5):
+            print(i)
+            print(pick_plan.trajectory_stages[i])
+            print()
+
+            if i % 2 == 0:
+                success = mgc_arm.execute(pick_plan.trajectory_stages[i])
+            else:
+                success = mgc_gripper.execute(pick_plan.trajectory_stages[i])
+
+        return success
+
     def query_moveit_for_reachability(self, graspit_grasp_msg):
         """
         :type graspit_grasp_msg: graspit_msgs.msg.Grasp
@@ -83,6 +100,15 @@ class GraspReachabilityAnalyzer():
                                                       object_name=graspit_grasp_msg.object_name,
                                                       allowed_planning_time=self.allowed_planning_time,
                                                       planner_id=self.planner_id,
-                                                      planning_group=self.move_group)
+                                                      planning_group=self.move_group,
+                                                      plan_only=True)
+
+        # Adjust pickup_goal for errors
+
+
+        import IPython
+        IPython.embed()
+
+        assert(False)
 
         return self.send_goal(pickup_goal)
