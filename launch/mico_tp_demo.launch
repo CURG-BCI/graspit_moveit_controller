@@ -1,9 +1,0 @@
-<launch>
-
-  <include file="$(find mico_moveit)/launch/demo.launch"/>
-
-  <param name="moveGroupName" value="mico_arm" />
-  <node name="moveit_trajectory_planner" pkg="moveit_trajectory_planner" type="moveit_trajectory_planner_node.py" output="screen"/>
-  <test test-name="moveit_trajectory_planner_test" name="test_node" pkg="moveit_trajectory_planner" type="mico_moveit_trajectory_planner_test_node.py" />
-
-</launch>

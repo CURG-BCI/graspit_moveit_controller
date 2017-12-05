@@ -27,7 +27,6 @@ class WorldManager:
         moveit_commander.roscpp_initialize(sys.argv)
 
         self.scene = ExtendedPlanningSceneInterface()
-        self.robot = moveit_commander.RobotCommander()
 
         self.model_manager = ModelRecManager()
 

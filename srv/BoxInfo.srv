@@ -1,6 +1,0 @@
-geometry_msgs/PoseStamped pose
-float64 sizeX
-float64 sizeY
-float64 sizeZ
-string name
----

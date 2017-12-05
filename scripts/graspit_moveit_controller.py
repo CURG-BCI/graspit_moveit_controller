@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import rospy
-import roslib
 
 import graspit_msgs.msg
 
@@ -10,7 +9,6 @@ from common_helpers.grasp_reachability_analyzer import GraspReachabilityAnalyzer
 import sys
 import moveit_commander
 import actionlib
-roslib.load_manifest('moveit_trajectory_planner')
 
 
 class GraspAnalyzerNode(object):
