@@ -2,7 +2,7 @@
 <package>
   <name>graspit_moveit_controller</name>
   <version>0.0.0</version>
-  <description>The graspit_moveit_controller package</description>
+  <description>Code for interfacing with Moveit! and Graspit! grasps using pick and place</description>
 
   <maintainer email="davidwatkins@cs.columbia.edu">David Watkins</maintainer>
 

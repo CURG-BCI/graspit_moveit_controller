@@ -19,6 +19,7 @@ import rospy
 import roslib
 
 from moveit_trajectory_planner.srv import *
+import sys
 
 roslib.load_manifest('moveit_trajectory_planner')
 

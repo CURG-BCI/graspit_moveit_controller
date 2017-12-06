@@ -1,15 +1,13 @@
 ## ! DO NOT MANUALLY INVOKE THIS setup.py, USE CATKIN INSTEAD
 
-from setuptools import setup
+from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
-# requirements = [line.strip() for line in open("requirements.txt")]
+# fetch values from package.xml
+setup_args = generate_distutils_setup(
+    name="graspit_moveit_controller",
+    description="Code for interfacing with Moveit! and Graspit! grasps using pick and place",
+    packages=['graspit_moveit_controller'],
+    package_dir={'': 'src'})
 
-d = generate_distutils_setup()
-
-d['name'] = "graspit_moveit_controller"
-d['description'] = "Code for interfacing with Moveit! and Graspit! grasps using pick and place"
-d['packages'] = ['graspit_moveit_controller']
-d['package_dir'] = {'': 'src'}
-
-setup(**d)
+setup(**setup_args)

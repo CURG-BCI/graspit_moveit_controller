@@ -105,17 +105,17 @@ def graspit_grasp_to_moveit_grasp(
         grasp_goal_point_positions,                                 # type: typing.List[float]
         grasp_goal_point_time_from_start_secs,                      # type: int
 
-        moveit_grasp_grasp_posture_joint_names,                     # type: typing.List[str]
+        grasp_posture_joint_names,                                  # type: typing.List[str]
 
-        moveit_grasp_pre_grasp_approach_min_distance,               # type: float
-        moveit_grasp_pre_grasp_approach_desired_distance,           # type: float
-        moveit_grasp_pre_grasp_approach_direction,                  # type: geometry_msgs.msg.Vector3Stamped
+        pre_grasp_approach_min_distance,                            # type: float
+        pre_grasp_approach_desired_distance,                        # type: float
+        pre_grasp_approach_direction,                               # type: geometry_msgs.msg.Vector3Stamped
 
-        moveit_grasp_post_grasp_retreat_min_distance,               # type: float
-        moveit_grasp_post_grasp_retreat_desired_distance,           # type: float
-        moveit_grasp_post_grasp_retreat_direction,                  # type: geometry_msgs.msg.Vector3Stamped
+        post_grasp_retreat_min_distance,                            # type: float
+        post_grasp_retreat_desired_distance,                        # type: float
+        post_grasp_retreat_direction,                               # type: geometry_msgs.msg.Vector3Stamped
 
-        moveit_grasp_max_contact_force                              # type: int
+        max_contact_force                                           # type: int
 ):
     # type: (...) -> moveit_msgs.msg.Grasp
 
@@ -157,7 +157,7 @@ def graspit_grasp_to_moveit_grasp(
     grasp_goal_point.time_from_start.secs = grasp_goal_point_time_from_start_secs
 
     moveit_grasp.grasp_posture.points.append(grasp_goal_point)
-    moveit_grasp.grasp_posture.joint_names = moveit_grasp_grasp_posture_joint_names
+    moveit_grasp.grasp_posture.joint_names = grasp_posture_joint_names
 
     # # The position of the end-effector for the grasp.  This is the pose of
     # # the "parent_link" of the end-effector, not actually the pose of any
@@ -186,21 +186,22 @@ def graspit_grasp_to_moveit_grasp(
     #
     # GripperTranslation pre_grasp_approach
     #
-    moveit_grasp.pre_grasp_approach.min_distance = moveit_grasp_pre_grasp_approach_min_distance
-    moveit_grasp.pre_grasp_approach.desired_distance = moveit_grasp_pre_grasp_approach_desired_distance
+    moveit_grasp.pre_grasp_approach.min_distance = pre_grasp_approach_min_distance
+    moveit_grasp.pre_grasp_approach.desired_distance = pre_grasp_approach_desired_distance
     moveit_grasp.pre_grasp_approach.direction = get_approach_dir_in_ee_coords(
         listener,
         end_effector_link,
-        moveit_grasp_pre_grasp_approach_direction
+        pre_grasp_approach_direction
     )
+    # rospy.loginfo("Approach dir in ee coords (direction: {})".format(moveit_grasp.pre_grasp_approach.direction))
 
     # # The retreat direction to take after a grasp has been completed (object is attached)
     #
     # GripperTranslation post_grasp_retreat
     #
-    moveit_grasp.post_grasp_retreat.min_distance = moveit_grasp_post_grasp_retreat_min_distance
-    moveit_grasp.post_grasp_retreat.desired_distance = moveit_grasp_post_grasp_retreat_desired_distance
-    moveit_grasp.post_grasp_retreat.direction = moveit_grasp_post_grasp_retreat_direction
+    moveit_grasp.post_grasp_retreat.min_distance = post_grasp_retreat_min_distance
+    moveit_grasp.post_grasp_retreat.desired_distance = post_grasp_retreat_desired_distance
+    moveit_grasp.post_grasp_retreat.direction = post_grasp_retreat_direction
 
     # # The retreat motion to perform when releasing the object; this information
     # # is not necessary for the grasp itself, but when releasing the object,
@@ -215,7 +216,7 @@ def graspit_grasp_to_moveit_grasp(
     #
     # float32 max_contact_force
     #
-    moveit_grasp.max_contact_force = moveit_grasp_max_contact_force
+    moveit_grasp.max_contact_force = max_contact_force
 
     # # an optional list of obstacles that we have semantic information about
     # # and that can be touched/pushed/moved in the course of grasping
