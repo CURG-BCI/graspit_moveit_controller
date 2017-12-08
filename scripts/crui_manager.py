@@ -183,7 +183,7 @@ class CRUIManager(object):
         # type: pick_result -> moveit_msgs.msg.PickupResult
 
         if not success:
-            rospy.logerr("Failed to execute pick. Reason: {}".format(pick_result))
+            rospy.logerr("Failed to execute pick. Reason:")
             self._execute_grasp_as.set_aborted(result)
             return []
         else:
@@ -193,7 +193,7 @@ class CRUIManager(object):
         success, place_result = self.grasping_controller.place(goal.grasp.object_name, pick_result, block_pose_stamped)
 
         if not success:
-            rospy.logerr("Failed to execute place. Reason: {}".format(place_result))
+            rospy.logerr("Failed to execute place. Reason")
             self._execute_grasp_as.set_aborted(result)
             return []
         else:
